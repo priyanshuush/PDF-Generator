@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "react-pdf": "^7.5.1",
+    "react-pdf-thumbnail": "^0.1.0"
+  }
+}
