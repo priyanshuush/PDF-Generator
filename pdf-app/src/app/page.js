@@ -1,6 +1,6 @@
 import CustomNavbar from '@/components/CustomNavbar'
 import Dropzone from '@/components/Dropzone'
-import Footer from '@/components/Footer'
+
 
 export default function Home() {
   return (
@@ -10,8 +10,6 @@ export default function Home() {
       <br/>
       <Dropzone/>
       <br/>
-      <Footer/>
-
 
     </div>
 
