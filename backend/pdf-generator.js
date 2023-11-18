@@ -68,7 +68,7 @@ app.get('/pdf/:filename', async (req, res) => {
 
 
     const pdf = await fs.readFile(filePath);
-    res.contentType('application/pdf');
+    res.contentType("application/pdf; charset=utf-8");
     res.send(pdf);  // Get the pdf file.
 
 
@@ -131,3 +131,6 @@ app.post('/extract-pages', async (req, res) => {
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
+
+
+module.exports = app;
