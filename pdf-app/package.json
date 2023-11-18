@@ -28,12 +28,7 @@
     "react-pdf-thumbnail": "^0.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.23.3",
-    "@babel/preset-env": "^7.23.3",
-    "@babel/preset-react": "^7.23.3",
-    "@wojtekmaj/enzyme-adapter-react-17": "^0.8.0",
     "autoprefixer": "^10.0.1",
-    "babel-jest": "^29.7.0",
     "enzyme-to-json": "^3.6.2",
     "eslint": "^8",
     "eslint-config-next": "14.0.2",
