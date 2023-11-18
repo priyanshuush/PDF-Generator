@@ -117,11 +117,34 @@ app.post('/extract-pages', async (req, res) => {
     const newPdfBytes = await newPdf.save();
     await fs.writeFile(newFilePath, newPdfBytes);
 
+    const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`; // Generate download link
+
+    res.json({ downloadLink }); // Send the download link in the response
+
     res.contentType('application/pdf');
     res.send(newPdfBytes);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error extracting pages');
+  }
+});
+
+
+// API endpoint to provide download link for extracted PDF
+app.get('/download/:filename', async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const filePath = path.join(__dirname, 'uploads', filename);
+
+    const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+    if (!fileExists) {
+      return res.status(404).send('File not found');
+    }
+
+    res.download(filePath); // Provide the file for download
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error retrieving file for download');
   }
 });
 
