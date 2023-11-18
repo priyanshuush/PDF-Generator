@@ -46,20 +46,11 @@
     "testMatch": [
       "**/pdf-app/tests/**/*.test.js"
     ],
-    "transform": {
-      "^.+\\.(js|jsx)$": "babel-jest"
-    },
     "moduleFileExtensions": [
       "js",
       "jsx",
       "json",
       "node"
-    ],
-    "setupFilesAfterEnv": [
-      "./tests/setupTests.js"
-    ],
-    "snapshotSerializers": [
-      "enzyme-to-json/serializer"
     ]
   }
 }
