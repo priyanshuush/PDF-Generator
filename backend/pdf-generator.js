@@ -5,14 +5,40 @@ const { PDFDocument } = require('pdf-lib');
 const fs = require('fs/promises');
 const path = require('path');
 const bodyParser = require('body-parser');
+const dbConnect = require("./db/dbConnect");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("./db/userModel");
+const auth = require("./auth");
 
 
+require('dotenv').config()
 
 
+console.log(process.env.DB_URL);
 
 // Initializing
 const app = express();
 const port = 3000;
+
+dbConnect();
+
+
+// Curb Cores Error by adding a header here
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+  );
+  next();
+});
+
+
 
 // Parser for JSON
 app.use(bodyParser.json());
@@ -123,16 +149,16 @@ app.get('/pdf/:filename', async (req, res) => {
 
 // API endpoint to extract selected pages and create a new PDF
 app.post('/extract-pages', async (req, res) => {
-
   try {
-    const { filename, selectedPages, newFilename } = req.body; // JSON data to be passed by the user.
+    const { filename, selectedPages, newFilename } = req.body;
 
-    if (!filename || !selectedPages || !Array.isArray(selectedPages)) {  // Check if the data is provdided by the user or not.
+    if (!filename || !selectedPages || !Array.isArray(selectedPages)) {
       return res.status(400).send('Invalid request data');
     }
 
     const filePath = `uploads/${filename}`;
-    const fileExists = await fs.access(filePath).then(() => true).catch(() => false); // Check for the file existence.
+    const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+
     if (!fileExists) {
       return res.status(404).send('File not found');
     }
@@ -140,7 +166,6 @@ app.post('/extract-pages', async (req, res) => {
     const pdf = await PDFDocument.load(await fs.readFile(filePath));
     const newPdf = await PDFDocument.create();
 
-    // Get the pages from selected pages provided by the user and make them into a new pdf.
     for (const pageNumber of selectedPages) {
       if (pageNumber <= 0 || pageNumber > pdf.getPageCount()) {
         return res.status(400).send(`Invalid page number: ${pageNumber}`);
@@ -149,20 +174,74 @@ app.post('/extract-pages', async (req, res) => {
       newPdf.addPage(copiedPage);
     }
 
-
     const extension = path.extname(filename);
-    const extractedFilename = newFilename || `extracted_${Date.now()}${extension}`;  // Name of the pdf provided by the user, and if not then name it based on time.
+    const extractedFilename = newFilename || `extracted_${Date.now()}${extension}`;
     const newFilePath = path.join(__dirname, 'uploads', extractedFilename);
 
     const newPdfBytes = await newPdf.save();
     await fs.writeFile(newFilePath, newPdfBytes);
 
-    const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`; // Generate download link
+    const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
 
-    res.json({ downloadLink }); // Send the download link in the response
+    res.json({ downloadLink });
 
-    res.contentType('application/pdf');
-    res.send(newPdfBytes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error extracting pages');
+  }
+});
+
+
+// API endpoint to extract selected pages and create a new PDF for logged in user.
+app.post('/login/extract-pages', auth, async (req, res) => {
+  try {
+    const { filename, selectedPages, newFilename } = req.body;
+
+    if (!filename || !selectedPages || !Array.isArray(selectedPages)) {
+      return res.status(400).send('Invalid request data');
+    }
+
+    const filePath = `uploads/${filename}`;
+    const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+
+    if (!fileExists) {
+      return res.status(404).send('File not found');
+    }
+
+    const pdf = await PDFDocument.load(await fs.readFile(filePath));
+    const newPdf = await PDFDocument.create();
+
+    for (const pageNumber of selectedPages) {
+      if (pageNumber <= 0 || pageNumber > pdf.getPageCount()) {
+        return res.status(400).send(`Invalid page number: ${pageNumber}`);
+      }
+      const [copiedPage] = await newPdf.copyPages(pdf, [pageNumber - 1]);
+      newPdf.addPage(copiedPage);
+    }
+
+    const extension = path.extname(filename);
+    const extractedFilename = newFilename || `extracted_${Date.now()}${extension}`;
+    const newFilePath = path.join(__dirname, 'uploads', extractedFilename);
+
+    const newPdfBytes = await newPdf.save();
+    await fs.writeFile(newFilePath, newPdfBytes);
+
+    const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
+
+    if (req.user) {
+      const foundUser = await User.findOne({ email: req.user.userEmail });
+
+      if (foundUser) {
+        foundUser.downloadUrls.push(downloadLink);
+        await foundUser.save();
+        console.log('User data saved:', foundUser);
+      } else {
+        console.log('User not found');
+      }
+    }
+
+    res.json({ downloadLink });
+
   } catch (error) {
     console.error(error);
     res.status(500).send('Error extracting pages');
@@ -188,6 +267,115 @@ app.get('/download/:filename', async (req, res) => {
   }
 });
 
+
+// register endpoint
+app.post("/register", (request, response) => {
+  // hash the password
+  bcrypt
+    .hash(request.body.password, 10)
+    .then((hashedPassword) => {
+      // create a new user instance and collect the data
+      const user = new User({
+        email: request.body.email,
+        password: hashedPassword,
+      });
+
+      // save the new user
+      user
+        .save()
+        // return success if the new user is added to the database successfully
+        .then((result) => {
+          response.status(201).send({
+            message: "User Created Successfully",
+            result,
+          });
+        })
+        // catch error if the new user wasn't added successfully to the database
+        .catch((error) => {
+          console.error('Error creating user:', error);
+          response.status(500).send({
+            message: "Error creating user",
+            error,
+          });
+        });
+    })
+    // catch error if the password hash isn't successful
+    .catch((e) => {
+      response.status(500).send({
+        message: "Password was not hashed successfully",
+        e,
+      });
+    });
+});
+
+
+
+// login endpoint
+app.post("/login", (request, response) => {
+  // check if email exists
+  User.findOne({ email: request.body.email })
+
+    // if email exists
+    .then((user) => {
+      // compare the password entered and the hashed password found
+      bcrypt
+        .compare(request.body.password, user.password)
+
+        // if the passwords match
+        .then((passwordCheck) => {
+
+          // check if password matches
+          if(!passwordCheck) {
+            return response.status(400).send({
+              message: "Passwords does not match",
+              error,
+            });
+          }
+
+          //   create JWT token
+          const token = jwt.sign(
+            {
+              userId: user._id,
+              userEmail: user.email,
+            },
+            "RANDOM-TOKEN",
+            { expiresIn: "24h" }
+          );
+
+          //   return success response
+          response.status(200).send({
+            message: "Login Successful",
+            email: user.email,
+            token,
+          });
+        })
+        // catch error if password does not match
+        .catch((error) => {
+          response.status(400).send({
+            message: "Passwords does not match",
+            error,
+          });
+        });
+    })
+    // catch error if email does not exist
+    .catch((e) => {
+      response.status(404).send({
+        message: "Email not found",
+        e,
+      });
+    });
+});
+
+
+// free endpoint
+app.get("/free-endpoint", (request, response) => {
+  response.json({ message: "You are free to access me anytime" });
+});
+
+// authentication endpoint
+app.get("/auth-endpoint", auth, (request, response) => {
+  response.json({ message: "You are authorized to access me" });
+});
 
 
 //   Server
