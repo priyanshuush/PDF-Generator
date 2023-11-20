@@ -5,6 +5,12 @@ const { PDFDocument } = require('pdf-lib');
 const fs = require('fs/promises');
 const path = require('path');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const db = require("./models");
+const Role = db.role;
+
+require('dotenv').config();
+
 
 // Initializing
 const app = express();
@@ -33,6 +39,42 @@ const upload = multer({ storage });
 
 
 // Routes
+
+
+// API for instructions
+app.get('/', async (req, res) => {
+  try {
+    const instructions = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>API Instructions</title>
+    </head>
+    <body>
+      <h1>Instructions for using the APIs:</h1>
+      <ul>
+        <li><code>'/upload'</code>: Upload your PDF file. Pass the PDF file in the body.</li>
+        <li><code>'/pdf/:filename'</code>: Replace 'filename' with your uploaded file name to retrieve the file.</li>
+        <li><code>'/extract-pages'</code>: Extract pages using this endpoint. Pass JSON data in the body.</li>
+      </ul>
+      <h2>JSON format for 'extract-pages':</h2>
+      <pre>
+        {
+          "filename": "sample.pdf", // Name of the file you've uploaded and want to extract pages from.
+          "selectedPages": [1, 3, 7], // Pages you want to extract.
+          "newFilename": "custom_extracted_file.pdf" // Name of the new file.
+        }
+      </pre>
+    </body>
+    </html>
+    `;
+    res.status(200).send(instructions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Some Internal Server Error.');
+  }
+});
+
 
 // API endpoint to upload a PDF file
 app.post('/upload', upload.single('pdf'), async (req, res) => {
