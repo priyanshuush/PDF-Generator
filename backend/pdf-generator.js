@@ -5,9 +5,7 @@ const { PDFDocument } = require('pdf-lib');
 const fs = require('fs/promises');
 const path = require('path');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-const db = require("./models");
-const Role = db.role;
+
 
 require('dotenv').config();
 
