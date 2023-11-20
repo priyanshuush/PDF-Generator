@@ -81,12 +81,18 @@ To run tests, run the following command. I used supertest to create the tests an
   npm test
 ```
 
+
+## Deployment
+
+https://pdf-generator-3n4m.onrender.com/
+
 <br>
 <br>
 <br>
 <br>
 <br>
 <br>
+
 
 # PDF-Generator (Frontend - NextJS)
 This NextJS application serves as a PDF Generator which lets the user to upload the pdf using a dropzone and then the user can preview the pages of the pdf that they uploaded. The user can also select the pages that they want to extract and then click on generate PDF to get a download link for the new pdf with extracted pages.
@@ -131,6 +137,25 @@ To run tests, run the following command. I used enzyme to create the tests and j
 ```bash
   npm test
 ```
+
+<br>
+
+## Screenshots
+
+### Upload PDF
+![Upload PDF Dropzone Screenshot](https://cdn.discordapp.com/attachments/438420692007125031/1175973494249492480/image.png?ex=656d2da9&is=655ab8a9&hm=61e8a1c3b883d8d7c483e6348e5bb597ac6265c279317e654d5d5b85ef149bf4&)
+
+<br>
+
+### PDF Preview
+![PDF Preview Screenshot](https://cdn.discordapp.com/attachments/438420692007125031/1175973615473275021/image.png?ex=656d2dc6&is=655ab8c6&hm=a2ee3c92197da32f9783f349d1e86b473fdaa3dc13fe167d93667d957bf82bd6&)
+
+<br>
+
+### Extract pages of PDF
+![Extract pages of PDF Screenshot](https://cdn.discordapp.com/attachments/438420692007125031/1175973743655407746/image.png?ex=656d2de5&is=655ab8e5&hm=dc10811f6a13eedd35681150ed240dd623f12cf099e0d2fd0f034e3510e7d3be&)
+
+<br>
 
 ## Deployment
 
