@@ -80,8 +80,12 @@ app.get('/', async (req, res) => {
         <li><code>'/upload'</code>: Upload your PDF file. Pass the PDF file in the body.</li>
         <li><code>'/pdf/:filename'</code>: Replace 'filename' with your uploaded file name to retrieve the file.</li>
         <li><code>'/extract-pages'</code>: Extract pages using this endpoint. Pass JSON data in the body.</li>
+        <li><code>'/login/extract-pages'</code>: Extract pages for logged-in users. Pass JSON data in the body.</li>
+        <li><code>'/register'</code>: Register a new user. Pass email and password in the body.</li>
+        <li><code>'/login'</code>: Login with registered email and password. Pass email and password in the body.</li>
+        <li><code>'/auth-endpoint'</code>: Requires authentication to access.</li>
       </ul>
-      <h2>JSON format for 'extract-pages':</h2>
+      <h2>JSON format for 'extract-pages' and 'login/extract-pages':</h2>
       <pre>
         {
           "filename": "sample.pdf", // Name of the file you've uploaded and want to extract pages from.
@@ -366,11 +370,6 @@ app.post("/login", (request, response) => {
     });
 });
 
-
-// free endpoint
-app.get("/free-endpoint", (request, response) => {
-  response.json({ message: "You are free to access me anytime" });
-});
 
 // authentication endpoint
 app.get("/auth-endpoint", auth, (request, response) => {

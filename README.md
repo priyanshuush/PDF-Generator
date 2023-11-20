@@ -26,6 +26,33 @@ This Express application serves as a PDF Generator API providing endpoints for u
 | `file`      | `application/pdf` | **Required**. pdf file |
 
 
+#### Register user
+```http
+  POST /register
+```
+
+| Body | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `{            | `json` | **Required**. email, password |
+  **"email"**: "email",
+  **"password"**: "password"
+}`
+
+
+#### Login user
+```http
+  POST /login
+```
+
+| Body | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `{            | `json` | **Required**. email, password |
+  **"email"**: "email",
+  **"password"**: "password"
+}`
+
+
+#### Extract Pages
 ```http
   POST /extract-pages
 ```
@@ -36,7 +63,24 @@ This Express application serves as a PDF Generator API providing endpoints for u
   **"filename"**: "sample.pdf",
   **"selectedPages"**: [1, 3, 7],
   **"newFilename":** "custom_extracted_file.pdf"
-}`       |
+}`
+
+
+
+#### Extract Pages For Logged In User
+```http
+  POST /login/extract-pages
+```
+
+| Body | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `{            | `json` | **Required**. filename, selectedPages |
+  **"filename"**: "sample.pdf",
+  **"selectedPages"**: [1, 3, 7],
+  **"newFilename":** "custom_extracted_file.pdf"
+}`
+
+<br>
 
 ## Installation
 
