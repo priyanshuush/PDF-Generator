@@ -23,11 +23,11 @@ const Footer = () => {
 
       <div className="max-w-3xl mx-auto text-sm flex flex-col items-center">
 
-        <p className="mb-1">Created with ❤️ by Utkarsh Gauniyal and Priyanshu Gupta</p>
+        <p className="mb-1">JustOurGigs ©</p>
 
         <div className="flex space-x-4">
 
-          <a href="#" className="hover:text-gray-700">About Us</a>
+          <a onClick={() => handleNavigation('/about')} className="hover:text-gray-700">About Us</a>
 
           <a href="#" className="hover:text-gray-700">Privacy Policy</a>
 

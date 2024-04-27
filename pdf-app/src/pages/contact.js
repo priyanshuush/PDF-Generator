@@ -10,6 +10,10 @@ const ContactUs = () => {
     router.push('/');
   };
 
+  const handleNavigation = (href) => {
+    router.push(href);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-8">
         {/* Navigation Button */}
@@ -46,12 +50,12 @@ const ContactUs = () => {
       {/* Footer Section */}
       <footer className="mt-12">
         <div className="max-w-3xl mx-auto text-sm text-gray-500">
-          <p className="mb-1">Created with â¤ï¸ by Utkarsh Gauniyal and Priyanshu Gupta</p>
+          <p className="mb-1 text-center">JustOurGigs ©</p>
           <div className="flex space-x-4">
-            <a href="#" className="hover:text-gray-700">About Us</a>
+          <a onClick={() => handleNavigation('/about')} className="cursor-pointer hover:text-gray-700">About Us</a>
             <a href="#" className="hover:text-gray-700">Privacy Policy</a>
             <a href="#" className="hover:text-gray-700">Terms of Service</a>
-            <a href="#" className="hover:text-gray-700">Contact Us</a>
+            <a onClick={() => handleNavigation('/contact')} className="cursor-pointer hover:text-gray-700">Contact Us</a>
           </div>
         </div>
       </footer>

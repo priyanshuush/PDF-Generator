@@ -2,7 +2,7 @@
 const express = require("express");
 const multer = require('multer');
 const { PDFDocument } = require('pdf-lib');
-const fs = require('fs/promises');
+const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
 const dbConnect = require("./db/dbConnect");
@@ -13,7 +13,7 @@ const auth = require("./auth");
 const session = require('express-session');
 const passport = require("passport");
 
- require('./Outh')
+require('./Outh')
 
 
 require('dotenv').config()
@@ -129,11 +129,32 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 });
 
 
+app.get('/allpdfs', auth, async (req, res) => {
+  try {
+    if (req.user) {
+      const foundUser = await User.findOne({ email: req.user.userEmail });
+
+      if (foundUser) {
+        const downloadUrls = foundUser.downloadUrls || [];
+        res.json(downloadUrls);
+      } else {
+        console.log('User not found');
+        res.status(404).send('User not found');
+      }
+    } else {
+      res.status(401).send('Unauthorized');
+    }
+  }
+  catch(error) {
+    console.error(error);
+    res.status(500).send('Error retrieving files');
+  }
+})
 
 
 
 // API endpoint to retrieve the stored PDF file
-app.get('/pdf/:filename', async (req, res) => {
+app.get('/pdf/:filename', auth, async (req, res) => {
   try {
     const { filename } = req.params;
     const filePath = `uploads/${filename}`;
@@ -161,40 +182,53 @@ app.get('/pdf/:filename', async (req, res) => {
 // API endpoint to extract selected pages and create a new PDF
 app.post('/extract-pages', async (req, res) => {
   try {
-    const { filename, selectedPages, newFilename } = req.body;
+    const { filename, selectedPages } = req.body;
 
-    if (!filename || !selectedPages || !Array.isArray(selectedPages)) {
-      return res.status(400).send('Invalid request data');
-    }
+// Check if filename and selectedPages are provided and selectedPages is an array
+if (!filename || !selectedPages || !Array.isArray(selectedPages)) {
+  return res.status(400).send('Invalid request data');
+}
 
-    const filePath = `uploads/${filename}`;
-    const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+// Construct the file path
+const filePath = `uploads/${filename}`;
 
-    if (!fileExists) {
-      return res.status(404).send('File not found');
-    }
+// Check if the file exists
+const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false);
 
-    const pdf = await PDFDocument.load(await fs.readFile(filePath));
-    const newPdf = await PDFDocument.create();
+if (!fileExists) {
+  return res.status(404).send('File not found');
+}
 
-    for (const pageNumber of selectedPages) {
-      if (pageNumber <= 0 || pageNumber > pdf.getPageCount()) {
-        return res.status(400).send(`Invalid page number: ${pageNumber}`);
-      }
-      const [copiedPage] = await newPdf.copyPages(pdf, [pageNumber - 1]);
-      newPdf.addPage(copiedPage);
-    }
+// Load the original PDF
+const pdf = await PDFDocument.load(await fs.promises.readFile(filePath));
+const newPdf = await PDFDocument.create();
 
-    const extension = path.extname(filename);
-    const extractedFilename = newFilename || `extracted_${Date.now()}${extension}`;
-    const newFilePath = path.join(__dirname, 'uploads', extractedFilename);
+// Iterate through selected pages and copy them to the new PDF
+for (const pageNumber of selectedPages) {
+  if (pageNumber <= 0 || pageNumber > pdf.getPageCount()) {
+    return res.status(400).send(`Invalid page number: ${pageNumber}`);
+  }
+  const [copiedPage] = await newPdf.copyPages(pdf, [pageNumber - 1]);
+  newPdf.addPage(copiedPage);
+}
 
-    const newPdfBytes = await newPdf.save();
-    await fs.writeFile(newFilePath, newPdfBytes);
+// Generate a new filename with original filename and current date
+const currentDate = new Date().toISOString().replace(/:/g, '-').slice(0, 19);
+const extension = path.extname(filename);
+const extractedFilename = `${path.basename(filename, extension)}_${currentDate}${extension}`;
 
-    const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
+// Construct the new file path
+const newFilePath = path.join(__dirname, 'uploads', extractedFilename);
 
-    res.json({ downloadLink });
+// Save the new PDF to the file system
+const newPdfBytes = await newPdf.save();
+await fs.promises.writeFile(newFilePath, newPdfBytes);
+
+// Construct the download link
+const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
+
+res.json({ downloadLink });
+
 
   } catch (error) {
     console.error(error);
@@ -266,7 +300,7 @@ app.get('/download/:filename', async (req, res) => {
     const { filename } = req.params;
     const filePath = path.join(__dirname, 'uploads', filename);
 
-    const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+    const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false);
     if (!fileExists) {
       return res.status(404).send('File not found');
     }
