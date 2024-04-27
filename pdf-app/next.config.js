@@ -1,22 +1,23 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-    reactStrictMode: true,
-    experimental: {
-    appDir: true,
-    },
+const path = require('path');
 
-    webpack: (config, { webpack }) => {
+module.exports = {
+  reactStrictMode: true,
+
+  webpack(config, { webpack }) {
+
+    config.resolve.alias['@'] = path.join(__dirname, 'src');
+
+
     config.experiments = {
-    ...config.experiments,
-    topLevelAwait: true,
-    }
+      ...config.experiments,
+      topLevelAwait: true,
+    };
 
     config.externals.push({
-    sharp: "commonjs sharp",
-    canvas: "commonjs canvas",
-    })
-    return config
-    },
-    }
+      sharp: 'commonjs sharp',
+      canvas: 'commonjs canvas',
+    });
 
-module.exports = nextConfig
+    return config;
+  },
+};

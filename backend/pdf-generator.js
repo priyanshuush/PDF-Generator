@@ -10,6 +10,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("./db/userModel");
 const auth = require("./auth");
+const session = require('express-session');
+const passport = require("passport");
+
+ require('./Outh')
 
 
 require('dotenv').config()
@@ -19,7 +23,10 @@ console.log(process.env.DB_URL);
 
 // Initializing
 const app = express();
-const port = 3000;
+const port = 8000;
+app.use(session({secret:'cats'}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 dbConnect();
 
@@ -376,11 +383,41 @@ app.get("/auth-endpoint", auth, (request, response) => {
   response.json({ message: "You are authorized to access me" });
 });
 
+function isLoggedIn(req,res,next){
+  req.user ? next() : res.sendStatus(401);
+}
+
+// Google OAuth2.0
+app.get("/oauth", (req, res) => {
+  res.send('<a href="/auth/google">Authenticate with Google</a>');
+});
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['email', 'profile'] })
+);
+
+ app.get('/google/callback',
+passport.authenticate('google',{
+  successRedirect:'/protected',
+  failureRedirect:'/auth/failure'
+}));
+
+app.get('/auth/faulure', (req,res)=>{
+  res.send('something went wrong..');
+})
+
+
+app.get('/protected', isLoggedIn, (req, res) => {
+  res.redirect('http://localhost:3000/');
+});
+
 
 //   Server
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
+
+
 
 
 module.exports = app;
