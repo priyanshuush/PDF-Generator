@@ -13,11 +13,7 @@ const Login = () => {
   const api = axios.create({
     baseURL: 'http://localhost:8000'
   });
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   console.log('username:', username);
-  //   console.log('password:', password);
-  // };
+
 
   const handleSubmit = async (e) => {
     

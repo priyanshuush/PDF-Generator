@@ -238,59 +238,103 @@ res.json({ downloadLink });
 
 
 // API endpoint to extract selected pages and create a new PDF for logged in user.
+
 app.post('/login/extract-pages', auth, async (req, res) => {
+
   try {
-    const { filename, selectedPages, newFilename } = req.body;
+
+    const { filename, selectedPages } = req.body;
+
 
     if (!filename || !selectedPages || !Array.isArray(selectedPages)) {
+
       return res.status(400).send('Invalid request data');
+
     }
+
 
     const filePath = `uploads/${filename}`;
-    const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+
+    const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false);
+
 
     if (!fileExists) {
+
       return res.status(404).send('File not found');
+
     }
 
-    const pdf = await PDFDocument.load(await fs.readFile(filePath));
+
+    const pdf = await PDFDocument.load(await fs.promises.readFile(filePath));
+
     const newPdf = await PDFDocument.create();
 
+
     for (const pageNumber of selectedPages) {
+
       if (pageNumber <= 0 || pageNumber > pdf.getPageCount()) {
+
         return res.status(400).send(`Invalid page number: ${pageNumber}`);
+
       }
+
       const [copiedPage] = await newPdf.copyPages(pdf, [pageNumber - 1]);
+
       newPdf.addPage(copiedPage);
+
     }
 
+
     const extension = path.extname(filename);
-    const extractedFilename = newFilename || `extracted_${Date.now()}${extension}`;
+
+    const currentDate = new Date().toISOString().replace(/:/g, '-').slice(0, 19);
+
+    const extractedFilename = `extracted_${currentDate}${extension}`;
+
     const newFilePath = path.join(__dirname, 'uploads', extractedFilename);
 
+
     const newPdfBytes = await newPdf.save();
-    await fs.writeFile(newFilePath, newPdfBytes);
+
+    await fs.promises.writeFile(newFilePath, newPdfBytes);
+
 
     const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
 
+
     if (req.user) {
+
       const foundUser = await User.findOne({ email: req.user.userEmail });
 
+
       if (foundUser) {
+
         foundUser.downloadUrls.push(downloadLink);
+
         await foundUser.save();
+
         console.log('User data saved:', foundUser);
+
       } else {
+
         console.log('User not found');
+
       }
+
     }
+
 
     res.json({ downloadLink });
 
+
   } catch (error) {
+
     console.error(error);
+
     res.status(500).send('Error extracting pages');
+
   }
+
 });
 
 
