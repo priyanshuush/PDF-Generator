@@ -21,6 +21,7 @@
     "jspdf": "^2.5.1",
     "next": "^14.1.4",
     "pdfjs": "^2.5.3",
+    "pdfjs-dist": "^4.1.392",
     "react": "^18.2.0",
     "react-dom": "^18",
     "react-dropzone": "^14.2.3",
