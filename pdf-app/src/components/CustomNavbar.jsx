@@ -3,23 +3,22 @@
 import { Disclosure, Menu } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react'; // Import useEffect and useState
+import { useEffect, useState } from 'react'; 
 
 export default function CustomNavbar() {
-  const [routerMounted, setRouterMounted] = useState(false); // State to track whether router is mounted
+  const [routerMounted, setRouterMounted] = useState(false); 
   const router = useRouter();
 
-  // useEffect hook to set routerMounted state when router is mounted
+
   useEffect(() => {
     setRouterMounted(true);
-    return () => setRouterMounted(false); // Cleanup function to reset state when component unmounts
+    return () => setRouterMounted(false); 
   }, []);
 
   const handleNavigation = (href) => {
     router.push(href);
   };
 
-  // Render null if router is not mounted
   if (!routerMounted) {
     return null;
   }

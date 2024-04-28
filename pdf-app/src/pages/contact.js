@@ -16,7 +16,7 @@ const ContactUs = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-8">
-        {/* Navigation Button */}
+      
       <button
         onClick={handleGoToEditor}
         className="absolute top-4 right-4 bg-gray-500 hover:bg-blue-900 text-white py-2 px-4 rounded-md transition-colors duration-300"

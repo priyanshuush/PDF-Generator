@@ -23,16 +23,16 @@ const Login = () => {
         email: username,
         password: password
       });
-        // Check the message from the response
+       
     if (response.data.message === "Login Successful") {
-      // Store the token in local storage
+      
       localStorage.setItem('token', response.data.token);
-      // Print the JWT token to the console
+    
       console.log("JWT token:", response.data.token);
-      // Redirect to the about page
+      
       router.push('/about');
     } else if(response.data.message === "Passwords does not match") {
-      // Display an alert for wrong ID or password
+      
       alert("Wrong ID or password");
     }
      

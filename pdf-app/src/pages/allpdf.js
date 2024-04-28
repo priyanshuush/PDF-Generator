@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Document, Page, pdfjs } from 'react-pdf';
-import 'pdfjs-dist/webpack'; // Import the worker script
+import 'pdfjs-dist/webpack'; 
 
-// Set the worker script's path
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 
@@ -23,7 +23,7 @@ const AllPdfPage = () => {
         const token = localStorage.getItem('token');
         if (!token) {
           setLoading(false);
-          return; // Exit early if no token is found
+          return; 
         }
 
         const response = await axios.get('http://localhost:8000/allpdfs', {
@@ -108,79 +108,6 @@ return (
 };
 
 export default AllPdfPage;
-
-
-
-/*---------------------------------------------------------------------- */
-
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import "tailwindcss/tailwind.css";
-
-// const AllPdfPage = () => {
-//   const [pdfLinks, setPdfLinks] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const fetchPdfLinks = async () => {
-//       try {
-//         const token = localStorage.getItem('token');
-//         if (!token) {
-//           setLoading(false);
-//           return; // Exit early if no token is found
-//         }
-
-//         const response = await axios.get('http://localhost:8000/allpdfs', {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//           },
-//         });
-//         setPdfLinks(response.data);
-//         setLoading(false);
-//       } catch (error) {
-//         console.error('Error fetching PDF links:', error);
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchPdfLinks();
-//   }, []);
-
-//   if (loading) {
-//     return <div>Loading...</div>;
-//   }
-
-//   if (!pdfLinks.length &&!loading) {
-//     return <div>Please log in to show your saved PDFs</div>;
-//   }
-
-//   return (
-//     <div>
-//       <h1>All PDFs</h1>
-//       <div className="grid grid-cols-4 gap-4">
-//         {pdfLinks.map((link, index) => {
-//           const fileName = link.split('/').pop().replace('.pdf', '');
-//           return (
-//             <div key={index} className="p-4 border rounded-lg shadow-md">
-//               <img src="https://developing8.org/wp-content/themes/education-mind-child/images/file-icons/pdf.png" alt="PDF Icon" className="mx-auto mb-2" />
-//               <h2 className="text-center">{fileName}</h2>
-
-//               <button 
-//               onClick={() => window.open(link, '_blank')}
-//               className="btn btn-grey mt-2 block mx-auto text-center"
-//             >
-//               Download
-//             </button>
-//             </div>
-//           );
-//         })}
-//       </div>
-//     </div>
-//   );
-  
-// };
-
-// export default AllPdfPage;
 
 
 
