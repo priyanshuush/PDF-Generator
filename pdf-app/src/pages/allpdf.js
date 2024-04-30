@@ -2,13 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Document, Page, pdfjs } from 'react-pdf';
-import 'pdfjs-dist/webpack'; 
+
+
+import 'pdfjs-dist/webpack';
+import Head from 'next/head';
+
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 
 import "tailwindcss/tailwind.css";
+import CustomNavbar from '@/components/CustomNavbar';
 
 const AllPdfPage = () => {
  const [pdfLinks, setPdfLinks] = useState([]);
@@ -67,47 +72,51 @@ const AllPdfPage = () => {
 }
 
 return (
-  <div>
-    <h1>All PDFs</h1>
-    <div className="grid grid-cols-4 gap-4">
-      {pdfLinks.map((link, index) => (
-        <div key={index} className="p-4 border rounded-lg shadow-md cursor-pointer" onClick={() => setSelectedPdf(link)}>
-          <img src="https://developing8.org/wp-content/themes/education-mind-child/images/file-icons/pdf.png" alt="PDF Icon" className="mx-auto mb-2" />
-          <h2 className="text-center">{link.split('/').pop().replace('.pdf', '')}</h2>
-          <button 
-            onClick={() => window.open(link, '_blank')}
-            className="btn btn-grey mt-2 block mx-auto text-center"
-          >
-            Download
-          </button>
-        </div>
-      ))}
-    </div>
-    {selectedPdf && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white p-4 rounded-lg shadow-lg relative" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-          <button onClick={closeOverlay} className="absolute top-0 right-0 p-2">Close</button>
-          <Document
-            file={selectedPdf}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={(error) => console.error('Error loading PDF:', error)}
-          >
-            <Page pageNumber={currentPage} width={800} renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                  customTextRenderer={false} />
-          </Document>
-          <div className="flex justify-between mt-4">
-            <button onClick={handlePreviousPage} disabled={currentPage <= 1}>Previous</button>
-            <button onClick={handleNextPage} disabled={currentPage >= numPages}>Next</button>
+  <><CustomNavbar /> <br/><><Head>
+    <title>
+      All PDFs
+    </title>
+  </Head><div>
+      <div className="grid grid-cols-4 gap-4">
+        {pdfLinks.map((link, index) => (
+          <div key={index} className="p-4 border rounded-lg shadow-md cursor-pointer" onClick={() => setSelectedPdf(link)}>
+            <img src="https://developing8.org/wp-content/themes/education-mind-child/images/file-icons/pdf.png" alt="PDF Icon" className="mx-auto mb-2" />
+            <h2 className="text-center">{link.split('/').pop().replace('.pdf', '')}</h2>
+            <button
+              onClick={() => window.open(link, '_blank')}
+              className="btn btn-grey mt-2 block mx-auto text-center"
+            >
+              Download
+            </button>
+          </div>
+        ))}
+      </div>
+      {selectedPdf && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-4 rounded-lg shadow-lg relative" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <button onClick={closeOverlay} className="absolute top-0 right-0 p-2">Close</button>
+            <Document
+              file={selectedPdf}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={(error) => console.error('Error loading PDF:', error)}
+            >
+              <Page pageNumber={currentPage} width={800} renderTextLayer={false}
+                renderAnnotationLayer={false}
+                customTextRenderer={false} />
+            </Document>
+            <div className="flex justify-between mt-4">
+              <button onClick={handlePreviousPage} disabled={currentPage <= 1}>Previous</button>
+              <button onClick={handleNextPage} disabled={currentPage >= numPages}>Next</button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-  </div>
+      )}
+    </div></></>
 );
 };
 
+
+
+
+
 export default AllPdfPage;
-
-
-
