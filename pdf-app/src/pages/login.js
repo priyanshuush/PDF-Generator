@@ -31,8 +31,10 @@ const Login = () => {
     if (response.data.message === "Login Successful") {
       
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('username', response.data.username);
 
       console.log("JWT token:", response.data.token);
+      console.log("username:", response.data.username);
 
       router.push('/about');
     } else if(response.data.message === "Passwords does not match") {
@@ -61,7 +63,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
             <div className="flex items-center">
               <label htmlFor="username" className="w-1/3 text-sm font-medium">
-                Username
+                Email
               </label>
               <input
                 id="username"

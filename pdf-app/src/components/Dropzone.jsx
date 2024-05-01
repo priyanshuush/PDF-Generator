@@ -4,6 +4,7 @@ import Dropzone from 'react-dropzone';
 import { Document, Page, pdfjs } from 'react-pdf';
 import axios from 'axios';
 
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const DropzoneArea = () => {
@@ -76,6 +77,7 @@ const DropzoneArea = () => {
  };
 
  return (
+  
     <div className="flex-grow mx-auto h-screen p-4">
       {!pdfFile && (
         <Dropzone onDrop={onDrop} accept="application/pdf" maxFiles={1} maxSize={5242880} multiple={false}>
@@ -190,6 +192,7 @@ const DropzoneArea = () => {
         </div>
       )}
     </div>
+   
  );
 };
 

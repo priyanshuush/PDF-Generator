@@ -129,29 +129,50 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 });
 
 
+// app.get('/allpdfs', auth, async (req, res) => {
+//   try {
+//     if (req.user) {
+//       const foundUser = await User.findOne({ email: req.user.userEmail });
+
+//       if (foundUser) {
+//         const downloadUrls = foundUser.downloadUrls || [];
+//         res.json(downloadUrls);
+//       } else {
+//         console.log('User not found');
+//         res.status(404).send('User not found');
+//       }
+//     } else {
+//       res.status(401).send('Unauthorized');
+//     }
+//   }
+//   catch(error) {
+//     console.error(error);
+//     res.status(500).send('Error retrieving files');
+//   }
+// })
+
 app.get('/allpdfs', auth, async (req, res) => {
   try {
-    if (req.user) {
-      const foundUser = await User.findOne({ email: req.user.userEmail });
-
-      if (foundUser) {
-        const downloadUrls = foundUser.downloadUrls || [];
-        res.json(downloadUrls);
-      } else {
-        console.log('User not found');
-        res.status(404).send('User not found');
-      }
-    } else {
-      res.status(401).send('Unauthorized');
-    }
+     const page = parseInt(req.query.page) || 1;
+     const limit = parseInt(req.query.limit) || 4;
+     const skip = (page - 1) * limit;
+ 
+     const foundUser = await User.findOne({ email: req.user.userEmail });
+ 
+     if (foundUser) {
+       const downloadUrls = foundUser.downloadUrls || [];
+       const paginatedUrls = downloadUrls.slice(skip, skip + limit);
+       res.json(paginatedUrls);
+     } else {
+       console.log('User not found');
+       res.status(404).send('User not found');
+     }
+  } catch(error) {
+     console.error(error);
+     res.status(500).send('Error retrieving files');
   }
-  catch(error) {
-    console.error(error);
-    res.status(500).send('Error retrieving files');
-  }
-})
-
-
+ });
+ 
 
 // API endpoint to retrieve the stored PDF file
 app.get('/pdf/:filename', auth, async (req, res) => {
@@ -367,6 +388,7 @@ app.post("/register", (request, response) => {
       const user = new User({
         email: request.body.email,
         password: hashedPassword,
+        username: request.body.username
       });
 
       // save the new user
@@ -436,6 +458,7 @@ app.post("/login", (request, response) => {
             message: "Login Successful",
             email: user.email,
             token,
+            username: user.username,
           });
         })
         // catch error if password does not match
