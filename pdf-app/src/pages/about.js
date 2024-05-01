@@ -1,18 +1,10 @@
 import React from 'react';
-import { useRouter } from 'next/router';
 import "tailwindcss/tailwind.css";
 import Head from 'next/head';
+import Link from 'next/link';
 
-const Home = () => {
-  const router = useRouter();
+const About = () => {
 
-  const handleGoToEditor = () => {
-    router.push('/');
-  };
-
-  const handleNavigation = (href) => {
-    router.push(href);
-  };
 
   return (
     <>
@@ -20,14 +12,18 @@ const Home = () => {
       <title>
         About
       </title>
-    </Head><div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-8">
+    </Head>
+    
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-8">
         {/* Navigation Button */}
-        <button
-          onClick={handleGoToEditor}
-          className="absolute top-4 right-4 bg-gray-500 hover:bg-blue-900 text-white py-2 px-4 rounded-md transition-colors duration-300"
-        >
-          Go to PDF Editor
-        </button>
+        <Link href="/">
+          <button
+            className="absolute top-4 right-4 bg-gray-500 hover:bg-blue-900 text-white py-2 px-4 rounded-md transition-colors duration-300"
+          >
+          
+            Go to PDF Editor
+          </button>
+        </Link>
 
         {/* Welcome Section */}
         <div className="text-center mt-12">
@@ -75,10 +71,10 @@ const Home = () => {
           <div className="max-w-3xl mx-auto text-sm text-gray-500">
             <p className="mb-2 font-bold text-center">JustOurGigs ©</p>
             <div className="flex space-x-4">
-              <a onClick={() => handleNavigation('/about')} className="cursor-pointer hover:text-gray-700">About Us</a>
-              <a href="#" className="hover:text-gray-700">Privacy Policy</a>
-              <a href="#" className="hover:text-gray-700">Terms of Service</a>
-              <a onClick={() => handleNavigation('/contact')} className="cursor-pointer hover:text-gray-700">Contact Us</a>
+              <Link href={"/about"} className="cursor-pointer hover:text-gray-700">About Us</Link>
+              <Link href={"/about"} className="cursor-pointer hover:text-gray-700">Privacy Policy</Link>
+              <Link href={"/about"} className="cursor-pointer hover:text-gray-700">Terms of Service</Link>
+              <Link href={"/contact"} className="cursor-pointer hover:text-gray-700">Contact Us</Link>
             </div>
           </div>
         </footer>
@@ -86,4 +82,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default About;
