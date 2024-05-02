@@ -26,6 +26,12 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: "",
       }],
+      username: {
+        type: String,
+        required: [true, "Please provide an username!"],
+        unique: true,
+      },
+
 
 })
 

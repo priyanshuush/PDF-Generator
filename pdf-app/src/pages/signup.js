@@ -18,6 +18,7 @@ const Signup = () => {
        const response = await axios.post('http://localhost:8000/register', { 
          email: email,
          password: password,
+         username: username,
        });
        console.log(response.data);
        if (response && response.data && response.data.message === "User Created Successfully") {

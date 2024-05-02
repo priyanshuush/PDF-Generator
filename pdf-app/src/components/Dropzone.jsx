@@ -4,6 +4,8 @@ import Dropzone from 'react-dropzone';
 import { Document, Page, pdfjs } from 'react-pdf';
 import axios from 'axios';
 
+
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const DropzoneArea = () => {
@@ -14,10 +16,13 @@ const DropzoneArea = () => {
  const [error, setError] = useState(null);
  const [selectedPages, setSelectedPages] = useState([]);
 
+
  const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
       if (file.type === 'application/pdf') {
+
+        
         setTempFile(file); // Store the file temporarily
         setPdfFile(file); // Set the file for previewing
         setError(null);
@@ -25,29 +30,81 @@ const DropzoneArea = () => {
     }
  }, []);
 
- const handleUpload = () => {
-    if (tempFile) {
-      const formData = new FormData();
-      formData.append('pdf', tempFile);
 
-      axios.post(`http://localhost:8000/upload`, formData)
-        .then(response => {
-          console.log(response.data);
-          setError(null);
-          setTempFile(null); // Clear the tempFile state
-          console.log(selectedPages); // Log the selected pages
-        })
-        .catch(error => {
-          console.error('Error uploading file:', error);
-          setError('Error uploading file. Please try again.');
-        });
-    }
- };
+
+
+ 
 
  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages);
-    setCurrentPage(1);
-    setError(null);
+  setNumPages(numPages);
+  setCurrentPage(1);
+  setError(null);
+
+  // Upload the file to the server
+  if (tempFile) {
+    const formData = new FormData();
+    formData.append('pdf', tempFile);
+
+    axios.post(`http://localhost:8000/upload`, formData)
+      .then(response => {
+       
+        setError(null);
+       // setTempFile(null); // Clear the tempFile state
+        
+      })
+      .catch(error => {
+        console.error('Error uploading file:', error);
+        setError('Error uploading file. Please try again.');
+      });
+    console.log("File uploaded on load success");
+  }
+};
+
+const splitpdf = () => {
+  if (tempFile) {
+     
+     const filename = tempFile.name;
+ 
+     const data = {
+       filename: filename,
+       selectedPages: selectedPages, 
+     };
+     
+        
+
+     const token = localStorage.getItem('token');
+     let url = 'http://localhost:8000/extract-pages';
+     let config = {};
+     
+     // If token is present, set the URL and add authorization header
+     if (token) {
+       url = 'http://localhost:8000/login/extract-pages';
+       config = {
+         headers: {
+           Authorization: `Bearer ${token}`,
+         },
+       };
+     }
+
+     
+    
+     // Send the request to the server
+     axios.post(url, data, config)
+     
+       .then(response => {
+         
+         window.open(response.data.downloadLink, '_blank');
+         setError(null);
+         setTempFile(null); 
+         console.log(selectedPages); 
+         
+       })
+       .catch(error => {
+         console.error('Error splitting PDF:', error);
+         setError('Error splitting PDF. Please try again.');
+       });
+     console.log("splitpdf called");
+  }
  };
 
  const onDocumentLoadError = (error) => {
@@ -76,6 +133,7 @@ const DropzoneArea = () => {
  };
 
  return (
+  
     <div className="flex-grow mx-auto h-screen p-4">
       {!pdfFile && (
         <Dropzone onDrop={onDrop} accept="application/pdf" maxFiles={1} maxSize={5242880} multiple={false}>
@@ -167,13 +225,13 @@ const DropzoneArea = () => {
               >
                 Previous
               </button>
-              {tempFile && (
+              { (
                 <button
                  className="px-4 py-2 border border-gray-600 rounded bg-gray-500 hover:bg-gray-700 ml-4"
-                 onClick={handleUpload}
+                 onClick={splitpdf}
                  style={{ marginLeft: '45%' }}
                 >
-                 Upload
+                 Split PDF
                 </button>
               )}
               <button
@@ -190,6 +248,7 @@ const DropzoneArea = () => {
         </div>
       )}
     </div>
+   
  );
 };
 

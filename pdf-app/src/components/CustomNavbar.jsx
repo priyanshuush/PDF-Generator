@@ -3,8 +3,24 @@
 import { Disclosure, Menu } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline'; // Import the ChevronDownIcon
 import Link from 'next/link';
+import { useContext } from 'react';
+import { AuthContext } from '../AuthContext';
 
 export default function CustomNavbar() {
+
+  const { isAuthenticated, setIsAuthenticated } = useContext(AuthContext);
+  let username = localStorage.getItem('username');
+  console.log(localStorage.getItem('username'));
+  if (!username || username == 'undefined' || username.trim() === '') {
+    username = 'Pdf Ninja';
+  }
+
+  const handleLogout = () => {
+
+    localStorage.removeItem('token');
+
+    setIsAuthenticated(false);
+  };
   return (
     <Disclosure as="nav" className="bg-white fixed top-0 w-full z-10 shadow-md">
       {({ open }) => (
@@ -31,9 +47,7 @@ export default function CustomNavbar() {
                     <Link href="/">
                       <button className="text-black hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Home</button>
                     </Link>
-                    <Link href="/allpdf">
-                      <button className="text-black hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">All PDFs</button>
-                    </Link>
+                    
                     <Link href="/about">
                       <button className="text-black hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">About</button>
                     </Link>
@@ -48,9 +62,8 @@ export default function CustomNavbar() {
                             {({ active }) => (
                               <Link href="/faq">
                                 <button
-                                  className={`${
-                                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                                  } flex justify-between w-full px-4 py-2 text-sm`}
+                                  className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                    } flex justify-between w-full px-4 py-2 text-sm`}
                                 >
                                   Extract Pages
                                 </button>
@@ -61,9 +74,8 @@ export default function CustomNavbar() {
                             {({ active }) => (
                               <Link href="/contact">
                                 <button
-                                  className={`${
-                                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                                  } flex justify-between w-full px-4 py-2 text-sm`}
+                                  className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                    } flex justify-between w-full px-4 py-2 text-sm`}
                                 >
                                   Merge PDFs
                                 </button>
@@ -74,9 +86,8 @@ export default function CustomNavbar() {
                             {({ active }) => (
                               <Link href="/contact">
                                 <button
-                                  className={`${
-                                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                                  } flex justify-between w-full px-4 py-2 text-sm`}
+                                  className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                    } flex justify-between w-full px-4 py-2 text-sm`}
                                 >
                                   Compress PDF
                                 </button>
@@ -90,13 +101,56 @@ export default function CustomNavbar() {
                 </div>
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                {/* Login and Sign Up buttons */}
-                <Link href="/login">
-                  <button className="bg-gray-500 rounded-lg shadow-lg hover:bg-gray-900 hover:text-white rounded-md px-3 py-2 text-sm font-medium mr-4">Login</button>
-                </Link>
-                <Link href="/signup">
-                  <button className="bg-gray-500 rounded-lg shadow-lg hover:bg-gray-900 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Sign Up</button>
-                </Link>
+                {isAuthenticated ? (
+
+                  <Menu as="div" className="relative">
+                    <Menu.Button className="text-black hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium flex items-center"> {/* Added flex and items-center */}
+                      {username} <ChevronDownIcon className="h-4 w-4 ml-1" /> {/* Added ChevronDownIcon */}
+                    </Menu.Button>
+                    <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <div className="py-1">
+                        <Menu.Item>
+                          {({ active }) => (
+                            <Link href="/allpdf">
+                              <button
+                                className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                  } flex justify-between w-full px-4 py-2 text-sm`}
+                              >
+                                All PDFs
+                              </button>
+                            </Link>
+                          )}
+                        </Menu.Item>
+                        <Menu.Item>
+                          {({ active }) => (
+
+                            <button
+                              onClick={handleLogout}
+                              className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                } flex justify-between w-full px-4 py-2 text-sm`}
+                            >
+                              Log Out
+                            </button>
+
+                          )}
+                        </Menu.Item>
+
+                      </div>
+                    </Menu.Items>
+                  </Menu>
+
+
+
+                ) : (
+                  <>
+                    <Link href="/login">
+                      <button className="bg-gray-500 rounded-lg shadow-lg hover:bg-gray-900 hover:text-white rounded-md px-3 py-2 text-sm font-medium mr-4">Login</button>
+                    </Link>
+                    <Link href="/signup">
+                      <button className="bg-gray-500 rounded-lg shadow-lg hover:bg-gray-900 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Sign Up</button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

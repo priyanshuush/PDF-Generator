@@ -3,6 +3,7 @@ import CustomNavbar from '@/components/CustomNavbar'
 import DropzoneArea from '@/components/Dropzone'
 
 import Footer from '@/components/footer'
+import { AuthProvider } from '@/AuthContext'
 
 
 
@@ -10,6 +11,8 @@ import Footer from '@/components/footer'
 export default function Home() {
 
   return (
+   <AuthProvider>
+    
 
     <div>
 
@@ -26,7 +29,8 @@ export default function Home() {
 
 
     </div>
-
+   
+    </AuthProvider>
 
   )
 
