@@ -9,11 +9,12 @@ import { AuthContext } from '../AuthContext';
 export default function CustomNavbar() {
 
   const { isAuthenticated, setIsAuthenticated } = useContext(AuthContext);
-  let username = localStorage.getItem('username');
-  console.log(localStorage.getItem('username'));
-  if (!username || username == 'undefined' || username.trim() === '') {
-    username = 'Pdf Ninja';
-  }
+
+
+ let username ;
+ if (typeof window !== 'undefined') {
+    username = localStorage.getItem('username') || username;
+ }
 
   const handleLogout = () => {
 
