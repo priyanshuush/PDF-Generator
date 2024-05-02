@@ -7,6 +7,7 @@ import Head from 'next/head';
 import "tailwindcss/tailwind.css";
 import CustomNavbar from '@/components/CustomNavbar';
 import { AuthProvider } from '@/AuthContext';
+import Cookies from 'js-cookie';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -33,7 +34,7 @@ const AllPdfPage = () => {
  useEffect(() => {
     const fetchPdfLinks = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token =  Cookies.get('token');
         if (!token) {
           setLoading(false);
           return;

@@ -5,6 +5,7 @@ import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outli
 import Link from 'next/link';
 import { useContext } from 'react';
 import { AuthContext } from '../AuthContext';
+import Cookies from 'js-cookie';
 
 export default function CustomNavbar() {
 
@@ -13,12 +14,12 @@ export default function CustomNavbar() {
 
  let username ;
  if (typeof window !== 'undefined') {
-    username = localStorage.getItem('username') || username;
+    username = Cookies.get('username') || username;
  }
 
   const handleLogout = () => {
 
-    localStorage.removeItem('token');
+    Cookies.remove('token');
 
     setIsAuthenticated(false);
   };

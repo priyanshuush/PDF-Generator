@@ -8,6 +8,8 @@ import axios from 'axios';
 
 import Head from "next/head";
 
+import Cookies from 'js-cookie';
+
 
 
 const Login = () => {
@@ -30,8 +32,8 @@ const Login = () => {
 
     if (response.data.message === "Login Successful") {
       
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('username', response.data.username);
+      Cookies.set('token', response.data.token);
+      Cookies.set('username', response.data.username);
 
       console.log("JWT token:", response.data.token);
       console.log("username:", response.data.username);
