@@ -5,19 +5,21 @@ import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outli
 import Link from 'next/link';
 import { useContext } from 'react';
 import { AuthContext } from '../AuthContext';
+import Cookies from 'js-cookie';
 
 export default function CustomNavbar() {
 
   const { isAuthenticated, setIsAuthenticated } = useContext(AuthContext);
-  let username = localStorage.getItem('username');
-  console.log(localStorage.getItem('username'));
-  if (!username || username == 'undefined' || username.trim() === '') {
-    username = 'Pdf Ninja';
-  }
+
+
+ let username ;
+ if (typeof window !== 'undefined') {
+    username = Cookies.get('username') || username;
+ }
 
   const handleLogout = () => {
 
-    localStorage.removeItem('token');
+    Cookies.remove('token');
 
     setIsAuthenticated(false);
   };

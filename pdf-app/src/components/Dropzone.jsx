@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 import Dropzone from 'react-dropzone';
 import { Document, Page, pdfjs } from 'react-pdf';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 
 
@@ -72,7 +73,7 @@ const splitpdf = () => {
      
         
 
-     const token = localStorage.getItem('token');
+     const token = Cookies.get('token');
      let url = 'http://localhost:8000/extract-pages';
      let config = {};
      
@@ -136,7 +137,7 @@ const splitpdf = () => {
   
     <div className="flex-grow mx-auto h-screen p-4">
       {!pdfFile && (
-        <Dropzone onDrop={onDrop} accept="application/pdf" maxFiles={1} maxSize={5242880} multiple={false}>
+        <Dropzone onDrop={onDrop} accept={{ 'application/pdf': ['.pdf'] }} maxFiles={1} maxSize={5242880} multiple={false}>
           {({ getRootProps, getInputProps, isDragActive }) => (
             <div
               {...getRootProps()}

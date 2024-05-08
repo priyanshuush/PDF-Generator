@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useState, useEffect } from 'react';
-
+import Cookies from 'js-cookie';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
 
  // Simulate checking for a JWT token
  useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = Cookies.get('token');
     if (token) {
       setIsAuthenticated(true);
     }
