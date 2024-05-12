@@ -153,25 +153,35 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 
 app.get('/allpdfs', auth, async (req, res) => {
   try {
-     const page = parseInt(req.query.page) || 1;
-     const limit = parseInt(req.query.limit) || 4;
-     const skip = (page - 1) * limit;
- 
-     const foundUser = await User.findOne({ email: req.user.userEmail });
- 
-     if (foundUser) {
-       const downloadUrls = foundUser.downloadUrls || [];
-       const paginatedUrls = downloadUrls.slice(skip, skip + limit);
-       res.json(paginatedUrls);
-     } else {
-       console.log('User not found');
-       res.status(404).send('User not found');
-     }
-  } catch(error) {
-     console.error(error);
-     res.status(500).send('Error retrieving files');
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const foundUser = await User.findOne({ email: req.user.userEmail });
+
+    if (foundUser) {
+      const downloadUrls = foundUser.downloadUrls || [];
+
+      // Fetch paginated data from MongoDB
+      const paginatedUrls = await User.aggregate([
+        { $match: { email: req.user.userEmail } },
+        { $project: { downloadUrls: { $slice: ["$downloadUrls", skip, limit] } } }
+      ]);
+
+      // Extract the downloadUrls array from the result
+      const resultUrls = paginatedUrls.length > 0 ? paginatedUrls[0].downloadUrls : [];
+
+      res.json(resultUrls);
+    } else {
+      console.log('User not found');
+      res.status(404).send('User not found');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error retrieving files');
   }
- });
+});
+
  
 
 // API endpoint to retrieve the stored PDF file
@@ -196,6 +206,29 @@ app.get('/pdf/:filename', auth, async (req, res) => {
     res.status(500).send('Error retrieving file');
   }
 });
+
+
+// API endpoint to delete a stored PDF file
+app.delete('/pdf/:filename', auth, async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const filePath = `uploads/${filename}`;
+
+    const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false); // Check if the file exists.
+    if (!fileExists) {
+      return res.status(404).send('File not found');
+    }
+
+    // Delete the file
+    await fs.promises.unlink(filePath);
+
+    res.send(`File "${filename}" deleted successfully`);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error deleting file');
+  }
+});
+
 
 
 
