@@ -1,39 +1,29 @@
 const mongoose = require("mongoose");
 
-
-
 const UserSchema = new mongoose.Schema({
-  
-
-  googleId: {
-    type: String,
-    
-    unique: true,
-  },
+    googleId: {
+        type: String,
+        unique: true,
+    },
     email: {
         type: String,
         required: [true, "Please provide an Email!"],
         unique: [true, "Email Exist"],
-      },
-
-      password: {
+    },
+    password: {
         type: String,
         required: [false, "Please provide a password!"],
         unique: false,
-      },
-
-      downloadUrls: [{
-        type: String,
-        default: "",
-      }],
-      username: {
+    },
+    username: {
         type: String,
         required: [true, "Please provide an username!"],
         unique: true,
-      },
+    },
+    created_at: {
+        type: Date,
+        default: Date.now
+    }
+});
 
-
-})
-
-
-module.exports = mongoose.model.Users || mongoose.model("Users", UserSchema);
+module.exports = mongoose.model("User", UserSchema);

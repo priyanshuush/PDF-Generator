@@ -9,6 +9,7 @@ const dbConnect = require("./db/dbConnect");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("./db/userModel");
+const PDF = require("./db/pdfModel");
 const auth = require("./auth");
 const session = require('express-session');
 const passport = require("passport");
@@ -214,7 +215,8 @@ app.delete('/pdf/:filename', auth, async (req, res) => {
     const { filename } = req.params;
     const filePath = `uploads/${filename}`;
 
-    const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false); // Check if the file exists.
+    // Check if the file exists
+    const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false);
     if (!fileExists) {
       return res.status(404).send('File not found');
     }
@@ -222,12 +224,32 @@ app.delete('/pdf/:filename', auth, async (req, res) => {
     // Delete the file
     await fs.promises.unlink(filePath);
 
+    // Find the user and remove the matching download URL from the array
+    const foundUser = await User.findOne({ 
+      email: req.user.userEmail,
+      downloadUrls: { $elemMatch: { $regex: filename, $options: 'i' } }
+    });
+
+    if (foundUser) {
+      // Get the index of the matching download URL
+      const index = foundUser.downloadUrls.findIndex(url => url.includes(filename));
+
+      if (index !== -1) {
+        // Remove the matching download URL from the array
+        foundUser.downloadUrls.splice(index, 1);
+        await foundUser.save();
+      }
+    } else {
+      console.log('User not found');
+    }
+
     res.send(`File "${filename}" deleted successfully`);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error deleting file');
   }
 });
+
 
 
 
