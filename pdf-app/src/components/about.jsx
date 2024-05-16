@@ -1,6 +1,5 @@
 import React from 'react';
 import "tailwindcss/tailwind.css";
-import Head from 'next/head';
 import Link from 'next/link';
 
 const About = () => {
@@ -8,29 +7,8 @@ const About = () => {
 
   return (
     <>
-    <Head>
-      <title>
-        About
-      </title>
-    </Head>
-    
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-8">
-        {/* Navigation Button */}
-        <Link href="/">
-          <button
-            className="absolute top-4 right-4 bg-gray-500 hover:bg-blue-900 text-white py-2 px-4 rounded-md transition-colors duration-300"
-          >
-          
-            Go to PDF Editor
-          </button>
-        </Link>
-
-        {/* Welcome Section */}
-        <div className="text-center mt-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Welcome to PDF Generator!</h1>
-          <p className="text-lg text-gray-600">Revolutionize your document management experience with our innovative PDF extraction tool.</p>
-        </div>
-
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-8">
+      
         {/* Features Section */}
         <div className="max-w-3xl space-y-12 mt-12 prose text-gray-700">
           {/* Feature 1 */}
@@ -65,19 +43,6 @@ const About = () => {
             </p>
           </div>
         </div>
-
-        {/* Footer Section */}
-        <footer className="mt-auto py-8">
-          <div className="max-w-3xl mx-auto text-sm text-gray-500">
-            <p className="mb-2 font-bold text-center">JustOurGigs ©</p>
-            <div className="flex space-x-4">
-              <Link href={"/about"} className="cursor-pointer hover:text-gray-700">About Us</Link>
-              <Link href={"/about"} className="cursor-pointer hover:text-gray-700">Privacy Policy</Link>
-              <Link href={"/about"} className="cursor-pointer hover:text-gray-700">Terms of Service</Link>
-              <Link href={"/contact"} className="cursor-pointer hover:text-gray-700">Contact Us</Link>
-            </div>
-          </div>
-        </footer>
       </div></>
   );
 };
