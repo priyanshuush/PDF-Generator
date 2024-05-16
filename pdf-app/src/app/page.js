@@ -8,11 +8,12 @@ import { AuthProvider } from '@/AuthContext'
 
 
 
+
+
 export default function Home() {
 
   return (
-   <AuthProvider>
-    
+    <AuthProvider>
 
     <div>
 

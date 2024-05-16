@@ -8,6 +8,7 @@ import { Cookie } from 'next/font/google';
 
 
 
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const DropzoneArea = () => {
@@ -140,7 +141,7 @@ const splitpdf = () => {
  };
 
  return (
-  
+  <>
     <div className="flex-grow mx-auto h-screen p-4">
       {!pdfFile && (
         <Dropzone onDrop={onDrop} accept={{ 'application/pdf': ['.pdf'] }} maxFiles={1} maxSize={5242880} multiple={false}>
@@ -255,7 +256,7 @@ const splitpdf = () => {
         </div>
       )}
     </div>
-   
+    </>
  );
 };
 
