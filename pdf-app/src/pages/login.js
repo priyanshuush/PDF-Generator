@@ -15,6 +15,7 @@ import Cookies from 'js-cookie';
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  
   const router = useRouter();
   const api = axios.create({
     baseURL: 'http://localhost:8000'
@@ -28,15 +29,18 @@ const Login = () => {
       const response = await api.post('/login', { 
         email: username,
         password: password
+       
       });
 
     if (response.data.message === "Login Successful") {
       
       Cookies.set('token', response.data.token);
       Cookies.set('username', response.data.username);
+      Cookies.set('email', response.data.email);
 
       console.log("JWT token:", response.data.token);
       console.log("username:", response.data.username);
+      console.log("email:", response.data.email);
 
       router.push('/about');
     } else if(response.data.message === "Passwords does not match") {

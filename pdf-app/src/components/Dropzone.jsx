@@ -4,6 +4,7 @@ import Dropzone from 'react-dropzone';
 import { Document, Page, pdfjs } from 'react-pdf';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { Cookie } from 'next/font/google';
 
 
 
@@ -45,6 +46,11 @@ const DropzoneArea = () => {
   if (tempFile) {
     const formData = new FormData();
     formData.append('pdf', tempFile);
+
+    const email = Cookies.get('email');
+
+
+    formData.append('email', email);
 
     axios.post(`http://localhost:8000/upload`, formData)
       .then(response => {

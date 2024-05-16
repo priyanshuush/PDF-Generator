@@ -3,7 +3,15 @@ const mongoose = require("mongoose");
 const PDFSchema = new mongoose.Schema({
     userID: {
         type: String,
-        unique: true,
+        required: [false, "UserId!"],
+        unique: false,
+        
+    },
+    email: {
+        type: String,
+        required: [false, "Email"],
+        unique: false,
+        
     },
     title: {
         type: String
@@ -16,11 +24,11 @@ const PDFSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
-    session_token: {
-        type: String,
-        unique: true,
-        expires: '1h'
-    },
+    // session_token: {
+    //     type: String,
+    //     unique: false,  //change it to true when implementing session logic
+    //     expires: '1h'
+    // },
     downloadCount: {
         type: Number,
     }

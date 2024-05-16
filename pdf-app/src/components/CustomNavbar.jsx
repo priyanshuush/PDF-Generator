@@ -20,6 +20,8 @@ export default function CustomNavbar() {
   const handleLogout = () => {
 
     Cookies.remove('token');
+    Cookies.remove('email');
+    Cookies.remove('username');
 
     setIsAuthenticated(false);
   };
