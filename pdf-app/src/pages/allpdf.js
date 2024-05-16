@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -35,12 +30,12 @@ const AllPdfPage = () => {
         return;
       }
 
-      const response = await axios.get(`http://localhost:8000/allpdfs?page=${currentPage}&limit=5`, {
+      const response = await axios.get(`http://localhost:8000/allpdfs?page=${currentPage}&limit=8`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (response.data.length < 5) setHasMore(false);
+      if (response.data.length < 8) setHasMore(false);
 
       
       const currentPdfLinks = pdfLinks;
@@ -73,7 +68,37 @@ const lastPdfElementRef = useCallback(node => {
 
  function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
+    
  }
+
+ async function handleDeletePdf(pdfLink) {
+  try {
+    const token = Cookies.get('token');
+    if (!token) {
+      alert('Please log in to delete a PDF.');
+      return;
+    }
+   
+
+
+    const fileName = pdfLink.split('/').pop();
+    console.log("file name to be deleted:"+fileName);
+    // Call the API to delete the PDF
+    await axios.delete(`http://localhost:8000/pdf/${fileName}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+
+    // Remove the PDF from the local state
+    setPdfLinks(prevLinks => prevLinks.filter(link => link!== pdfLink));
+  } catch (error) {
+    console.error('Error deleting PDF:', error);
+    alert('Failed to delete the PDF. Please try again.');
+  }
+}
+
 
  function handleNextPage() {
     
@@ -123,6 +148,13 @@ const lastPdfElementRef = useCallback(node => {
                 >
                  Download
                 </button>
+                <button
+        onClick={() => handleDeletePdf(link)}
+        style={{ backgroundColor: 'red', color: 'white' }}
+        className="btn btn-danger mt-2 block mx-auto text-center px-4 py-2 rounded-md"
+      >
+        Delete PDF
+      </button>
               </div>
             </div>
           ))}
