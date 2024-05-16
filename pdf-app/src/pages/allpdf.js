@@ -1,5 +1,9 @@
 
 
+
+
+
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -20,48 +24,59 @@ const AllPdfPage = () => {
  const [hasMore, setHasMore] = useState(true);
  const observer = useRef();
 
- const lastPdfElementRef = useCallback(node => {
-    if (loading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setCurrentPage(prevPage => prevPage + 1);
-      }
-    });
-    if (node) observer.current.observe(node);
- }, [loading, hasMore]);
+
 
  useEffect(() => {
-    const fetchPdfLinks = async () => {
-      try {
-        const token =  Cookies.get('token');
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const response = await axios.get(`http://localhost:8000/allpdfs?page=${currentPage}&limit=8`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.data.length < 8) setHasMore(false);
-        setPdfLinks(prevLinks => [...prevLinks, ...response.data]);
+  const fetchPdfLinks = async () => {
+    try {
+      const token = Cookies.get('token');
+      if (!token) {
         setLoading(false);
-      } catch (error) {
-        console.error('Error fetching PDF links:', error);
-        setLoading(false);
+        return;
       }
-    };
 
-    fetchPdfLinks();
- }, [currentPage]);
+      const response = await axios.get(`http://localhost:8000/allpdfs?page=${currentPage}&limit=5`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.data.length < 5) setHasMore(false);
+
+      
+      const currentPdfLinks = pdfLinks;
+      setPdfLinks(prevLinks => [...currentPdfLinks,...response.data]);
+
+      
+      console.log([...currentPdfLinks,...response.data]);
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching PDF links:', error);
+      setLoading(false);
+    }
+  };
+
+  fetchPdfLinks();
+}, []);
+
+const lastPdfElementRef = useCallback(node => {
+  if (loading) return;
+  if (observer.current) observer.current.disconnect();
+  observer.current = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && hasMore) {
+      
+      setCurrentPage(prevPage => prevPage + 1);
+    }
+  });
+  if (node) observer.current.observe(node);
+}, [loading, hasMore]);
 
  function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
  }
 
  function handleNextPage() {
+    
     setCurrentPage(prevPage => prevPage + 1);
  }
 
@@ -77,7 +92,7 @@ const AllPdfPage = () => {
     return <div>Loading...</div>;
  }
 
- if (!pdfLinks.length && !loading) {
+ if (!pdfLinks.length &&!loading) {
     return <div>Please log in to show your saved PDFs</div>;
  }
 
@@ -139,3 +154,86 @@ const AllPdfPage = () => {
 };
 
 export default AllPdfPage;
+
+
+// import React, { useState, useEffect, useRef, useCallback } from 'react';
+// import axios from 'axios';
+// import { Document, Page, pdfjs } from 'react-pdf';
+// import Head from 'next/head';
+// import "tailwindcss/tailwind.css";
+// import CustomNavbar from '@/components/CustomNavbar';
+// import { AuthProvider } from '@/AuthContext';
+// import Cookies from 'js-cookie';
+
+// pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+
+// const AllPdfPage = () => {
+//  const [pdfLinks, setPdfLinks] = useState([]);
+//  const [loading, setLoading] = useState(true);
+//  const [selectedPdf, setSelectedPdf] = useState(null);
+//  const [numPages, setNumPages] = useState(null);
+//  const [currentPage, setCurrentPage] = useState(1);
+//  const [hasMore, setHasMore] = useState(true);
+//  const observer = useRef();
+
+//  const lastPdfElementRef = useCallback(node => {
+//     if (loading) return;
+//     if (observer.current) observer.current.disconnect();
+//     observer.current = new IntersectionObserver(entries => {
+//       if (entries[0].isIntersecting && hasMore) {
+//         setCurrentPage(prevPage => prevPage + 1);
+//       }
+//     });
+//     if (node) observer.current.observe(node);
+//  }, [loading, hasMore]);
+
+//  useEffect(() => {
+//     const fetchPdfLinks = async () => {
+//       try {
+//         const token =  Cookies.get('token');
+//         if (!token) {
+//           setLoading(false);
+//           return;
+//         }
+        
+        
+//         const response = await axios.get(`http://localhost:8000/allpdfs?page=${currentPage}&limit=8`, {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//         });
+//         if (response.data.length < 8) setHasMore(false);
+//         setPdfLinks(prevLinks => [...prevLinks, ...response.data]);
+//         setLoading(false);
+//       } catch (error) {
+//         console.error('Error fetching PDF links:', error);
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchPdfLinks();
+//  }, [currentPage]);
+
+//  function onDocumentLoadSuccess({ numPages }) {
+//     setNumPages(numPages);
+//  }
+
+//  function handleNextPage() {
+//     setCurrentPage(prevPage => prevPage + 1);
+//  }
+
+//  function handlePreviousPage() {
+//     setCurrentPage(prevPage => prevPage - 1);
+//  }
+
+//  function closeOverlay() {
+//     setSelectedPdf(null);
+//  }
+
+//  if (loading) {
+//     return <div>Loading...</div>;
+//  }
+
+//  if (!pdfLinks.length && !loading) {
+//     return <div>Please log in to show your saved PDFs</div>;
+//  }

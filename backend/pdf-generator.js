@@ -6,13 +6,15 @@ const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
 const dbConnect = require("./db/dbConnect");
+const PDFModel = require("./db/pdfModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("./db/userModel");
-const PDF = require("./db/pdfModel");
+
 const auth = require("./auth");
 const session = require('express-session');
 const passport = require("passport");
+const pdfModel = require("./db/pdfModel");
 
 require('./Outh')
 
@@ -25,7 +27,7 @@ console.log(process.env.DB_URL);
 // Initializing
 const app = express();
 const port = 8000;
-app.use(session({secret:'cats'}));
+app.use(session({ secret: 'cats' }));
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -70,7 +72,7 @@ const upload = multer({ storage });
 
 
 
-// Routes
+
 
 
 // API for instructions
@@ -113,16 +115,61 @@ app.get('/', async (req, res) => {
 
 
 // API endpoint to upload a PDF file
+// app.post('/upload', upload.single('pdf'), async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).send('No file uploaded'); // Check for if file is not uploaded.
+//     }
+
+//     const { originalname } = req.file;
+
+
+//     res.send(`File "${originalname}" uploaded successfully`);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send('Error uploading file');
+//   }
+// });
+
 app.post('/upload', upload.single('pdf'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).send('No file uploaded'); // Check for if file is not uploaded.
+      return res.status(400).send('No file uploaded');
+    }
+
+    const { email } = req.body;
+
+
+    let userId = null;
+    if (email) {
+      const user = await User.findOne({ email: email });
+
+
+      if (user) {
+        userId = user._id;
+
+      } else {
+        return res.status(404).send('User not found for the provided email ID');
+      }
     }
 
     const { originalname } = req.file;
+    const uploadDate = new Date();
+    const extractedFilename = `${originalname}`;
+    const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
+
+    const newPdfDoc = new PDFModel({
+      userID: userId,
+      email: email,
+      title: originalname,
+      // uploadDate: uploadDate,
+      downloadURL: downloadLink,
+    });
 
 
-    res.send(`File "${originalname}" uploaded successfully`);
+    await newPdfDoc.save();
+
+    res.status(200).send(`File "${originalname}" uploaded successfully`);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error uploading file');
@@ -130,27 +177,26 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 });
 
 
+
 // app.get('/allpdfs', auth, async (req, res) => {
 //   try {
 //     if (req.user) {
-//       const foundUser = await User.findOne({ email: req.user.userEmail });
-
-//       if (foundUser) {
-//         const downloadUrls = foundUser.downloadUrls || [];
+//       const foundDocs = await PDFModel.find({ email: req.user.userEmail });
+//       if (foundDocs && foundDocs.length > 0) {
+//         const downloadUrls = foundDocs.flatMap(doc => doc.downloadURL || []);
 //         res.json(downloadUrls);
 //       } else {
-//         console.log('User not found');
-//         res.status(404).send('User not found');
+//         console.log('No documents found');
+//         res.status(404).send('No documents found');
 //       }
 //     } else {
 //       res.status(401).send('Unauthorized');
 //     }
-//   }
-//   catch(error) {
+//   } catch (error) {
 //     console.error(error);
 //     res.status(500).send('Error retrieving files');
 //   }
-// })
+// });
 
 app.get('/allpdfs', auth, async (req, res) => {
   try {
@@ -158,24 +204,18 @@ app.get('/allpdfs', auth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const foundUser = await User.findOne({ email: req.user.userEmail });
+    const foundDocs = await PDFModel.find({ email: req.user.userEmail });
 
-    if (foundUser) {
-      const downloadUrls = foundUser.downloadUrls || [];
+    if (foundDocs && foundDocs.length > 0) {
 
-      // Fetch paginated data from MongoDB
-      const paginatedUrls = await User.aggregate([
-        { $match: { email: req.user.userEmail } },
-        { $project: { downloadUrls: { $slice: ["$downloadUrls", skip, limit] } } }
-      ]);
+      let allDownloadUrls = foundDocs.flatMap(doc => doc.downloadURL || []);
 
-      // Extract the downloadUrls array from the result
-      const resultUrls = paginatedUrls.length > 0 ? paginatedUrls[0].downloadUrls : [];
+      const paginatedUrls = allDownloadUrls.slice(skip, skip + limit);
 
-      res.json(resultUrls);
+      res.json(paginatedUrls);
     } else {
-      console.log('User not found');
-      res.status(404).send('User not found');
+      console.log('No documents found');
+      res.status(404).send('No documents found');
     }
   } catch (error) {
     console.error(error);
@@ -183,7 +223,6 @@ app.get('/allpdfs', auth, async (req, res) => {
   }
 });
 
- 
 
 // API endpoint to retrieve the stored PDF file
 app.get('/pdf/:filename', auth, async (req, res) => {
@@ -224,24 +263,20 @@ app.delete('/pdf/:filename', auth, async (req, res) => {
     // Delete the file
     await fs.promises.unlink(filePath);
 
+   
+
     // Find the user and remove the matching download URL from the array
-    const foundUser = await User.findOne({ 
+    const foundUser = await pdfModel.findOneAndDelete({
       email: req.user.userEmail,
-      downloadUrls: { $elemMatch: { $regex: filename, $options: 'i' } }
+      title: filename
     });
 
     if (foundUser) {
-      // Get the index of the matching download URL
-      const index = foundUser.downloadUrls.findIndex(url => url.includes(filename));
-
-      if (index !== -1) {
-        // Remove the matching download URL from the array
-        foundUser.downloadUrls.splice(index, 1);
-        await foundUser.save();
-      }
+      console.log('Document deleted successfully');
     } else {
-      console.log('User not found');
+      console.log('User & Document not found');
     }
+
 
     res.send(`File "${filename}" deleted successfully`);
   } catch (error) {
@@ -260,50 +295,50 @@ app.post('/extract-pages', async (req, res) => {
   try {
     const { filename, selectedPages } = req.body;
 
-// Check if filename and selectedPages are provided and selectedPages is an array
-if (!filename || !selectedPages || !Array.isArray(selectedPages)) {
-  return res.status(400).send('Invalid request data');
-}
+    // Check if filename and selectedPages are provided and selectedPages is an array
+    if (!filename || !selectedPages || !Array.isArray(selectedPages)) {
+      return res.status(400).send('Invalid request data');
+    }
 
-// Construct the file path
-const filePath = `uploads/${filename}`;
+    // Construct the file path
+    const filePath = `uploads/${filename}`;
 
-// Check if the file exists
-const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false);
+    // Check if the file exists
+    const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false);
 
-if (!fileExists) {
-  return res.status(404).send('File not found');
-}
+    if (!fileExists) {
+      return res.status(404).send('File not found');
+    }
 
-// Load the original PDF
-const pdf = await PDFDocument.load(await fs.promises.readFile(filePath));
-const newPdf = await PDFDocument.create();
+    // Load the original PDF
+    const pdf = await PDFDocument.load(await fs.promises.readFile(filePath));
+    const newPdf = await PDFDocument.create();
 
-// Iterate through selected pages and copy them to the new PDF
-for (const pageNumber of selectedPages) {
-  if (pageNumber <= 0 || pageNumber > pdf.getPageCount()) {
-    return res.status(400).send(`Invalid page number: ${pageNumber}`);
-  }
-  const [copiedPage] = await newPdf.copyPages(pdf, [pageNumber - 1]);
-  newPdf.addPage(copiedPage);
-}
+    // Iterate through selected pages and copy them to the new PDF
+    for (const pageNumber of selectedPages) {
+      if (pageNumber <= 0 || pageNumber > pdf.getPageCount()) {
+        return res.status(400).send(`Invalid page number: ${pageNumber}`);
+      }
+      const [copiedPage] = await newPdf.copyPages(pdf, [pageNumber - 1]);
+      newPdf.addPage(copiedPage);
+    }
 
-// Generate a new filename with original filename and current date
-const currentDate = new Date().toISOString().replace(/:/g, '-').slice(0, 19);
-const extension = path.extname(filename);
-const extractedFilename = `${path.basename(filename, extension)}_${currentDate}${extension}`;
+    // Generate a new filename with original filename and current date
+    const currentDate = new Date().toISOString().replace(/:/g, '-').slice(0, 19);
+    const extension = path.extname(filename);
+    const extractedFilename = `${path.basename(filename, extension)}_${currentDate}${extension}`;
 
-// Construct the new file path
-const newFilePath = path.join(__dirname, 'uploads', extractedFilename);
+    // Construct the new file path
+    const newFilePath = path.join(__dirname, 'uploads', extractedFilename);
 
-// Save the new PDF to the file system
-const newPdfBytes = await newPdf.save();
-await fs.promises.writeFile(newFilePath, newPdfBytes);
+    // Save the new PDF to the file system
+    const newPdfBytes = await newPdf.save();
+    await fs.promises.writeFile(newFilePath, newPdfBytes);
 
-// Construct the download link
-const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
+    // Construct the download link
+    const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
 
-res.json({ downloadLink });
+    res.json({ downloadLink });
 
 
   } catch (error) {
@@ -384,10 +419,19 @@ app.post('/login/extract-pages', auth, async (req, res) => {
 
 
       if (foundUser) {
+        let userId = foundUser._id;
+        const newPdfDoc = new PDFModel({
+          userID: userId,
+          email: req.user.userEmail,
+          title: extractedFilename,
+          // uploadDate: uploadDate,
+          downloadURL: downloadLink,
+        });
 
-        foundUser.downloadUrls.push(downloadLink);
 
-        await foundUser.save();
+        await newPdfDoc.save();
+
+
 
         console.log('User data saved:', foundUser);
 
@@ -491,7 +535,7 @@ app.post("/login", (request, response) => {
         .then((passwordCheck) => {
 
           // check if password matches
-          if(!passwordCheck) {
+          if (!passwordCheck) {
             return response.status(400).send({
               message: "Passwords does not match",
               error,
@@ -507,6 +551,8 @@ app.post("/login", (request, response) => {
             "RANDOM-TOKEN",
             { expiresIn: "24h" }
           );
+
+
 
           //   return success response
           response.status(200).send({
@@ -539,7 +585,7 @@ app.get("/auth-endpoint", auth, (request, response) => {
   response.json({ message: "You are authorized to access me" });
 });
 
-function isLoggedIn(req,res,next){
+function isLoggedIn(req, res, next) {
   req.user ? next() : res.sendStatus(401);
 }
 
@@ -552,13 +598,13 @@ app.get('/auth/google',
   passport.authenticate('google', { scope: ['email', 'profile'] })
 );
 
- app.get('/google/callback',
-passport.authenticate('google',{
-  successRedirect:'/protected',
-  failureRedirect:'/auth/failure'
-}));
+app.get('/google/callback',
+  passport.authenticate('google', {
+    successRedirect: '/protected',
+    failureRedirect: '/auth/failure'
+  }));
 
-app.get('/auth/faulure', (req,res)=>{
+app.get('/auth/faulure', (req, res) => {
   res.send('something went wrong..');
 })
 
@@ -569,9 +615,9 @@ app.get('/protected', isLoggedIn, (req, res) => {
 
 
 //   Server
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
 
 
 
