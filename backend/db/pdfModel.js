@@ -5,13 +5,11 @@ const PDFSchema = new mongoose.Schema({
         type: String,
         required: [false, "UserId!"],
         unique: false,
-        
     },
     email: {
         type: String,
         required: [false, "Email"],
         unique: false,
-        
     },
     title: {
         type: String
@@ -24,13 +22,18 @@ const PDFSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
-    // session_token: {
-    //     type: String,
-    //     unique: false,  //change it to true when implementing session logic
-    //     expires: '1h'
-    // },
+    sessionToken: {
+        type: String,
+        unique: false,
+        sparse: true
+    },
     downloadCount: {
         type: Number,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: '1h'
     }
 });
 

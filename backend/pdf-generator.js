@@ -115,22 +115,6 @@ app.get('/', async (req, res) => {
 });
 
 
-// API endpoint to upload a PDF file
-// app.post('/upload', upload.single('pdf'), async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).send('No file uploaded'); // Check for if file is not uploaded.
-//     }
-
-//     const { originalname } = req.file;
-
-
-//     res.send(`File "${originalname}" uploaded successfully`);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send('Error uploading file');
-//   }
-// });
 
 app.post('/upload', upload.single('pdf'), async (req, res) => {
   try {
@@ -154,11 +138,10 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     // Generate session token for unregistered users
     let sessionToken = '';
     if (!userId) {
-      sessionToken = uuidv4(); // Generate a unique session token
+      sessionToken = uuidv4();
     }
 
     const { originalname } = req.file;
-    const uploadDate = new Date();
     const extractedFilename = `${originalname}`;
     const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
 
@@ -166,16 +149,16 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
       userID: userId,
       email: email,
       title: originalname,
-      // uploadDate: uploadDate,
       downloadURL: downloadLink,
-      sessionToken: sessionToken, // Associate PDF with session token
+      sessionToken: sessionToken,
+      createdAt: new Date()
     });
 
     await newPdfDoc.save();
 
     // If session token is generated, set it as a cookie
     if (sessionToken) {
-      const tokenExpiry = new Date(Date.now() + 3600000); // Token expires in 1 hour
+      const tokenExpiry = new Date(Date.now() + 3600000);
       res.cookie('sessionToken', sessionToken, { expires: tokenExpiry });
     }
 
@@ -587,6 +570,18 @@ app.post("/login", (request, response) => {
         e,
       });
     });
+});
+
+
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error destroying session:', err);
+      return res.status(500).send('Error logging out');
+    }
+    res.clearCookie('connect.sid');
+    res.status(200).send('Logout successful');
+  });
 });
 
 
