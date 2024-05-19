@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { Document, Page, pdfjs } from 'react-pdf';
