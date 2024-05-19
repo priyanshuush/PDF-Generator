@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 import "tailwindcss/tailwind.css";
+import Cookies from 'js-cookie';
+import { toast } from "react-toastify";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import Head from 'next/head';
 
@@ -46,7 +50,9 @@ const Signup = () => {
    
 
   return (
-    <><Head>
+    <>
+    <ToastContainer />
+    <Head>
       <title>
         Sign Up
       </title>

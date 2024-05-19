@@ -8,7 +8,10 @@ import axios from 'axios';
 
 import Head from "next/head";
 
-import Cookies from 'js-cookie';
+import Cookies from 'js-cookie'
+import { toast } from "react-toastify";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 
@@ -45,13 +48,13 @@ const Login = () => {
       router.push('/about');
     } else if(response.data.message === "Passwords does not match") {
       
-      alert("Wrong ID or password");
+      toast.error("Wrong ID or password");
     }
      
       
     } catch (error) {
       console.error('Error:', error.response.data); 
-      alert("Wrong ID or password");
+      toast.error("Wrong ID or password");
     }
   };
   const handleGoogleLogin = () => {
@@ -59,7 +62,9 @@ const Login = () => {
  };
 
   return (
-    <><Head>
+    <>
+    <ToastContainer />
+    <Head>
       <title>
         Login
       </title>

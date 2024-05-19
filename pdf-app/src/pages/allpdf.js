@@ -6,6 +6,11 @@ import "tailwindcss/tailwind.css";
 import CustomNavbar from '@/components/CustomNavbar';
 import { AuthProvider } from '@/AuthContext';
 import Cookies from 'js-cookie';
+import { toast } from "react-toastify";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -74,7 +79,7 @@ const lastPdfElementRef = useCallback(node => {
   try {
     const token = Cookies.get('token');
     if (!token) {
-      alert('Please log in to delete a PDF.');
+      toast.error('Please log in to delete a PDF.');
       return;
     }
    
@@ -94,7 +99,7 @@ const lastPdfElementRef = useCallback(node => {
     setPdfLinks(prevLinks => prevLinks.filter(link => link!== pdfLink));
   } catch (error) {
     console.error('Error deleting PDF:', error);
-    alert('Failed to delete the PDF. Please try again.');
+    toast.error('Failed to delete the PDF. Please try again.');
   }
 }
 
@@ -121,7 +126,8 @@ const lastPdfElementRef = useCallback(node => {
  }
 
  return (
-  <AuthProvider>
+    <AuthProvider>
+    <ToastContainer />
     <>
       <CustomNavbar />
       <br />
