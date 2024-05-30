@@ -17,6 +17,7 @@
   "author": "Utkarsh Gauniyal",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.1623.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "dotenv": "^16.4.5",

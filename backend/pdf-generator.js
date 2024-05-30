@@ -11,6 +11,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("./db/userModel");
 const { v4: uuidv4 } = require('uuid');
+const AWS = require('aws-sdk');
 
 const auth = require("./auth");
 const session = require('express-session');
@@ -66,6 +67,15 @@ const storage = multer.diskStorage({
   },
 });
 
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION
+});
+
+const s3 = new AWS.S3();
+
+
 
 
 // Multer used for saving files.
@@ -73,6 +83,8 @@ const upload = multer({ storage });
 
 
 
+const storage2 = multer.memoryStorage(); // Use memory storage to get the file buffer
+const upload2 = multer({ storage2 });
 
 
 
@@ -116,7 +128,7 @@ app.get('/', async (req, res) => {
 
 
 
-app.post('/upload', upload.single('pdf'), async (req, res) => {
+app.post('/upload', upload2.single('pdf'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).send('No file uploaded');
@@ -141,9 +153,31 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
       sessionToken = uuidv4();
     }
 
-    const { originalname } = req.file;
+    const { originalname, buffer } = req.file;
     const extractedFilename = `${originalname}`;
-    const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
+    //const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
+
+    let downloadLink;
+
+
+    if (userId) {
+      // Upload to S3
+      const s3Params = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: `pdfs/${userId}/${originalname}`,
+        Body: buffer,
+        ContentType: req.file.mimetype,
+        //ACL: 'public-read' // or 'private' 
+      };
+      const s3Response = await s3.upload(s3Params).promise();
+      downloadLink = s3Response.Location; // S3 file URL
+    }else {
+      // Save locally
+      const localFilePath = `uploads/${extractedFilename}`;
+      require('fs').writeFileSync(localFilePath, buffer);
+      downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
+    }
+
 
     const newPdfDoc = new PDFModel({
       userID: userId,
@@ -171,30 +205,12 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 
 
 
-// app.get('/allpdfs', auth, async (req, res) => {
-//   try {
-//     if (req.user) {
-//       const foundDocs = await PDFModel.find({ email: req.user.userEmail });
-//       if (foundDocs && foundDocs.length > 0) {
-//         const downloadUrls = foundDocs.flatMap(doc => doc.downloadURL || []);
-//         res.json(downloadUrls);
-//       } else {
-//         console.log('No documents found');
-//         res.status(404).send('No documents found');
-//       }
-//     } else {
-//       res.status(401).send('Unauthorized');
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send('Error retrieving files');
-//   }
-// });
+
 
 app.get('/allpdfs', auth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
+    const limit = parseInt(req.query.limit) || 8;
     const skip = (page - 1) * limit;
 
     const foundDocs = await PDFModel.find({ email: req.user.userEmail });
@@ -215,6 +231,10 @@ app.get('/allpdfs', auth, async (req, res) => {
     res.status(500).send('Error retrieving files');
   }
 });
+
+
+
+
 
 
 // API endpoint to retrieve the stored PDF file
