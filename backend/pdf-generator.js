@@ -11,6 +11,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("./db/userModel");
 const { v4: uuidv4 } = require('uuid');
+const s3 = require('./aws-config');
 
 const auth = require("./auth");
 const session = require('express-session');
@@ -56,63 +57,21 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
-// Storage information for pdf saving.
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads'); // Directory where files will be stored
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname); // Getting the original file name of the uploaded file.
-  },
-});
-
-
-
-// Multer used for saving files.
+// Multer setup to handle file uploads
+const storage = multer.memoryStorage(); // Use memory storage
 const upload = multer({ storage });
 
 
 
-
-
-
-// API for instructions
-app.get('/', async (req, res) => {
-  try {
-    const instructions = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>API Instructions</title>
-    </head>
-    <body>
-      <h1>Instructions for using the APIs:</h1>
-      <ul>
-        <li><code>'/upload'</code>: Upload your PDF file. Pass the PDF file in the body.</li>
-        <li><code>'/pdf/:filename'</code>: Replace 'filename' with your uploaded file name to retrieve the file.</li>
-        <li><code>'/extract-pages'</code>: Extract pages using this endpoint. Pass JSON data in the body.</li>
-        <li><code>'/login/extract-pages'</code>: Extract pages for logged-in users. Pass JSON data in the body.</li>
-        <li><code>'/register'</code>: Register a new user. Pass email and password in the body.</li>
-        <li><code>'/login'</code>: Login with registered email and password. Pass email and password in the body.</li>
-        <li><code>'/auth-endpoint'</code>: Requires authentication to access.</li>
-      </ul>
-      <h2>JSON format for 'extract-pages' and 'login/extract-pages':</h2>
-      <pre>
-        {
-          "filename": "sample.pdf", // Name of the file you've uploaded and want to extract pages from.
-          "selectedPages": [1, 3, 7], // Pages you want to extract.
-          "newFilename": "custom_extracted_file.pdf" // Name of the new file.
-        }
-      </pre>
-    </body>
-    </html>
-    `;
-    res.status(200).send(instructions);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Some Internal Server Error.');
-  }
-});
+// Storage information for pdf saving.
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'uploads'); // Directory where files will be stored
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, file.originalname); // Getting the original file name of the uploaded file.
+//   },
+// });
 
 
 
@@ -138,31 +97,52 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     // Generate session token for unregistered users
     let sessionToken = '';
     if (!userId) {
-      sessionToken = uuidv4();
+      sessionToken = uuidv4(); // Generate a unique session token
     }
 
     const { originalname } = req.file;
-    const extractedFilename = `${originalname}`;
-    const downloadLink = `${req.protocol}://${req.get('host')}/download/${extractedFilename}`;
+    const fileExtension = path.extname(originalname);
+    const filename = `${uuidv4()}${fileExtension}`; // Generate a unique filename
 
-    const newPdfDoc = new PDFModel({
-      userID: userId,
-      email: email,
-      title: originalname,
-      downloadURL: downloadLink,
-      sessionToken: sessionToken,
-      createdAt: new Date()
+    // Upload to S3
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: filename,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+      ACL: 'private' // Make the file public
+    };
+
+    s3.upload(params, async (err, data) => {
+      if (err) {
+        console.error('Error uploading to S3:', err);
+        return res.status(500).send('Error uploading file');
+      }
+
+      const s3Key = data.Key;
+
+      const downloadLink = data.Location; // S3 URL
+
+      const newPdfDoc = new PDFModel({
+        userID: userId,
+        email: email,
+        title: originalname,
+        s3Key: s3Key,
+        downloadURL: downloadLink,
+        sessionToken: sessionToken,
+        createdAt: new Date() // Ensure createdAt is set to the current date
+      });
+
+      await newPdfDoc.save();
+
+      // If session token is generated, set it as a cookie
+      if (sessionToken) {
+        const tokenExpiry = new Date(Date.now() + 3600000); // Token expires in 1 hour
+        res.cookie('sessionToken', sessionToken, { expires: tokenExpiry });
+      }
+
+      res.status(200).send(`File "${originalname}" uploaded successfully`);
     });
-
-    await newPdfDoc.save();
-
-    // If session token is generated, set it as a cookie
-    if (sessionToken) {
-      const tokenExpiry = new Date(Date.now() + 3600000);
-      res.cookie('sessionToken', sessionToken, { expires: tokenExpiry });
-    }
-
-    res.status(200).send(`File "${originalname}" uploaded successfully`);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error uploading file');
@@ -191,21 +171,49 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 //   }
 // });
 
+// API endpoint to get all PDF links
 app.get('/allpdfs', auth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const foundDocs = await PDFModel.find({ email: req.user.userEmail });
+    console.log(req.user.userEmail)
+
+    const foundDocs = await PDFModel.find({ email: req.user.userEmail }).skip(skip).limit(limit);
+    console.log(foundDocs)
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
 
     if (foundDocs && foundDocs.length > 0) {
+      const s3DownloadUrls = await Promise.all(foundDocs.map(async (doc) => {
+        try {
+          const params = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME,
+            Key: doc.s3Key,
+            Expires: 60 * 60 // URL expires in 1 hour
+          };
+          const url = s3.getSignedUrl('getObject', params);
+          return {
+            title: doc.title,
+            downloadURL: url
+          };
+        } catch (error) {
+          console.error(`Error generating signed URL for ${doc.s3Key}:`, error);
+          return null;
+        }
+      }));
 
-      let allDownloadUrls = foundDocs.flatMap(doc => doc.downloadURL || []);
+      const validUrls = s3DownloadUrls.filter(urlObj => urlObj !== null);
 
-      const paginatedUrls = allDownloadUrls.slice(skip, skip + limit);
-
-      res.json(paginatedUrls);
+      if (validUrls.length > 0) {
+        res.json(validUrls);
+      } else {
+        console.log('No valid document URLs found');
+        res.status(404).send('No valid document URLs found');
+      }
     } else {
       console.log('No documents found');
       res.status(404).send('No documents found');
@@ -215,6 +223,7 @@ app.get('/allpdfs', auth, async (req, res) => {
     res.status(500).send('Error retrieving files');
   }
 });
+
 
 
 // API endpoint to retrieve the stored PDF file
@@ -241,35 +250,41 @@ app.get('/pdf/:filename', auth, async (req, res) => {
 });
 
 
-// API endpoint to delete a stored PDF file
+
+// API endpoint to delete the stored PDF file
 app.delete('/pdf/:filename', auth, async (req, res) => {
   try {
     const { filename } = req.params;
-    const filePath = `uploads/${filename}`;
 
-    // Check if the file exists
-    const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false);
-    if (!fileExists) {
-      return res.status(404).send('File not found');
+    // Construct the file key based on your logic
+    const s3Key = filename;
+
+    // Delete the file from the S3 bucket
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: s3Key,
+    };
+
+    try {
+      await s3.deleteObject(params).promise();
+      console.log(`File "${filename}" deleted from S3 successfully`);
+    } catch (s3Error) {
+      console.error(`Error deleting file "${filename}" from S3:`, s3Error);
+      return res.status(500).send('Error deleting file from S3');
     }
 
-    // Delete the file
-    await fs.promises.unlink(filePath);
-
-   
-
-    // Find the user and remove the matching download URL from the array
-    const foundUser = await pdfModel.findOneAndDelete({
+    // Find and delete the document from the MongoDB database
+    const foundDoc = await PDFModel.findOneAndDelete({
       email: req.user.userEmail,
-      title: filename
+      s3Key: s3Key
     });
 
-    if (foundUser) {
-      console.log('Document deleted successfully');
+    if (foundDoc) {
+      console.log('Document deleted from MongoDB successfully');
     } else {
-      console.log('User & Document not found');
+      console.log('Document not found in MongoDB');
+      return res.status(404).send('Document not found in database');
     }
-
 
     res.send(`File "${filename}" deleted successfully`);
   } catch (error) {
@@ -455,19 +470,37 @@ app.post('/login/extract-pages', auth, async (req, res) => {
 app.get('/download/:filename', async (req, res) => {
   try {
     const { filename } = req.params;
-    const filePath = path.join(__dirname, 'uploads', filename);
+    const { email } = req.query;
 
-    const fileExists = await fs.promises.access(filePath).then(() => true).catch(() => false);
-    if (!fileExists) {
+    let userId = null;
+    if (email) {
+      const user = await User.findOne({ email: email });
+      if (user) {
+        userId = user._id;
+      } else {
+        return res.status(404).send('User not found for the provided email ID');
+      }
+    }
+
+    const pdfDoc = await PDFModel.findOne({ userID: userId, title: filename });
+    if (!pdfDoc) {
       return res.status(404).send('File not found');
     }
 
-    res.download(filePath); // Provide the file for download
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: pdfDoc.s3Key,
+      Expires: 60 * 60, // URL expires in 1 hour
+    };
+
+    const url = s3.getSignedUrl('getObject', params);
+    res.status(200).send({ downloadURL: url });
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Error retrieving file for download');
+    console.error('Error generating pre-signed URL:', error);
+    res.status(500).send('Error generating pre-signed URL');
   }
 });
+
 
 
 // register endpoint
