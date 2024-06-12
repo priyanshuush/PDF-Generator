@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
 const PDFSchema = new mongoose.Schema({
-    userID: {
-        type: String,
-        required: [false, "UserId!"],
-        unique: false,
+    userID: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User', 
+        required: true 
     },
     email: {
         type: String,
@@ -18,7 +18,7 @@ const PDFSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    downloadURL: {
+    s3Key: {
         type: String,
         default: "",
     },

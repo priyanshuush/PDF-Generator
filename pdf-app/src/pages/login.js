@@ -45,7 +45,7 @@ const Login = () => {
       console.log("username:", response.data.username);
       console.log("email:", response.data.email);
 
-      router.push('/about');
+      router.push('/');
     } else if(response.data.message === "Passwords does not match") {
       
       toast.error("Wrong ID or password");
