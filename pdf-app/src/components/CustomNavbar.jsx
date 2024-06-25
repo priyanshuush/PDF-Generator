@@ -24,6 +24,11 @@ export default function CustomNavbar() {
     Cookies.remove('username');
 
     setIsAuthenticated(false);
+
+    if (window.location.pathname !== '/') {
+      
+      window.location.href = '/';
+  }
   };
   return (
     <Disclosure as="nav" className="bg-white fixed top-0 w-full z-10 shadow-md">
