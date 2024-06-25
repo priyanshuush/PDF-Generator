@@ -63,15 +63,7 @@ const upload = multer({ storage });
 
 
 
-// Storage information for pdf saving.
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, 'uploads'); // Directory where files will be stored
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, file.originalname); // Getting the original file name of the uploaded file.
-//   },
-// });
+
 
 
 
@@ -83,66 +75,111 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 
     const { email } = req.body;
     let userId = null;
+     // Generate session token for unregistered users
+     let sessionToken = '';
+     const user = null;
 
     // Check if the user is registered
     if (email) {
-      const user = await User.findOne({ email: email });
+       user = await User.findOne({ email: email });
+    }
       if (user) {
         userId = user._id;
+        const { originalname } = req.file;
+        const fileExtension = path.extname(originalname);
+        const filename = `${uuidv4()}${fileExtension}`; // Generate a unique filename
+    
+        // Upload to S3
+        const params = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: filename,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype,
+          ACL: 'private' // Make the file public
+        };
+    
+        s3.upload(params, async (err, data) => {
+          if (err) {
+            console.error('Error uploading to S3:', err);
+            return res.status(500).send('Error uploading file');
+          }
+    
+          const s3Key = data.Key;
+    
+          const downloadLink = data.Location; // S3 URL
+    
+          const newPdfDoc = new PDFModel({
+            userID: userId,
+            email: email,
+            title: originalname,
+            s3Key: s3Key,
+            downloadURL: downloadLink,
+           // sessionToken: sessionToken,
+           // createdAt: new Date() // Ensure createdAt is set to the current date
+          });
+    
+          await newPdfDoc.save();
+    
+          res.status(200).send(`File "${originalname}" uploaded successfully`);
+    
+          // If session token is generated, set it as a cookie
+          
+    
+         
+        });
       } else {
-        return res.status(404).send('User not found for the provided email ID');
-      }
-    }
-
-    // Generate session token for unregistered users
-    let sessionToken = '';
-    if (!userId) {
+      //  return res.status(404).send('User not found for the provided email ID');
       sessionToken = uuidv4(); // Generate a unique session token
-    }
+      const { originalname } = req.file;
+      const fileExtension = path.extname(originalname);
+      const filename = `${fileExtension}${fileExtension}`; 
+      const formData = new FormData();
+      formData.append('file', req.file.buffer, originalname);
 
-    const { originalname } = req.file;
-    const fileExtension = path.extname(originalname);
-    const filename = `${uuidv4()}${fileExtension}`; // Generate a unique filename
+      axios.post('https://tmpfiles.org/api/v1/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }).then(response => {
+        const tmpfileDownloadURL = response.data.data.URL; // check in postman
 
-    // Upload to S3
-    const params = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: filename,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-      ACL: 'private' // Make the file public
-    };
 
-    s3.upload(params, async (err, data) => {
-      if (err) {
-        console.error('Error uploading to S3:', err);
-        return res.status(500).send('Error uploading file');
-      }
+        const newPdfDoc = new PDFModel({
+          
+          title: originalname,
+          
+          downloadURL: tmpfileDownloadURL,
+          sessionToken: sessionToken,
+          shouldExpire : true
+        });
+  
+         newPdfDoc.save();
 
-      const s3Key = data.Key;
-
-      const downloadLink = data.Location; // S3 URL
-
-      const newPdfDoc = new PDFModel({
-        userID: userId,
-        email: email,
-        title: originalname,
-        s3Key: s3Key,
-        downloadURL: downloadLink,
-        sessionToken: sessionToken,
-        createdAt: new Date() // Ensure createdAt is set to the current date
+        res.status(200).send(`File "${originalname}" uploaded successfully to tmpfiles.org. Download URL: ${tmpfileDownloadURL}`);
+        
+       
+      }).catch(error => {
+        console.error('Error uploading to tmpfiles.org:', error);
+        res.status(500).send('Error uploading file Error uploading to tmpfiles.org');
       });
+      
 
-      await newPdfDoc.save();
 
-      // If session token is generated, set it as a cookie
-      if (sessionToken) {
-        const tokenExpiry = new Date(Date.now() + 3600000); // Token expires in 1 hour
-        res.cookie('sessionToken', sessionToken, { expires: tokenExpiry });
+
+
+
+
       }
+    
 
-      res.status(200).send(`File "${originalname}" uploaded successfully`);
-    });
+   
+    
+
+   
+    if (sessionToken) {
+      const tokenExpiry = new Date(Date.now() + 3600000); // Token expires in 1 hour
+      res.cookie('sessionToken', sessionToken, { expires: tokenExpiry });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send('Error uploading file');
@@ -196,6 +233,7 @@ app.get('/allpdfs', auth, async (req, res) => {
             Expires: 60 * 60 // URL expires in 1 hour
           };
           const url = s3.getSignedUrl('getObject', params);
+          console.log(`Generated URL for ${doc.s3Key}: ${url}`);
           return {
             title: doc.title,
             downloadURL: url

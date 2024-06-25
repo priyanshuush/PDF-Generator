@@ -4,7 +4,7 @@ const PDFSchema = new mongoose.Schema({
     userID: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User', 
-        required: true 
+        required: false 
     },
     email: {
         type: String,
@@ -30,11 +30,29 @@ const PDFSchema = new mongoose.Schema({
     downloadCount: {
         type: Number,
     },
-    createdAt: {
+    downloadURL:{
+        type: String,
+    },
+    shouldExpire: {
+        type: Boolean,
+        default: false
+    },
+    expiresAt: {
         type: Date,
-        default: Date.now,
-        expires: '1h'
+        default: null,
+        index: { expires: '1h' }
     }
+  
+});
+
+// Pre-save hook to set the expiresAt field based on shouldExpire
+PDFSchema.pre('save', function(next) {
+    if (this.shouldExpire) {
+        this.expiresAt = new Date(Date.now() + 3600000); 
+    } else {
+        this.expiresAt = null; 
+    }
+    next();
 });
 
 module.exports = mongoose.model("PDF", PDFSchema);

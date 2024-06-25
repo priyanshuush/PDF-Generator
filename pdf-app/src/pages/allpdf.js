@@ -122,6 +122,7 @@ const AllPdfPage = () => {
           <div className="grid grid-cols-4 gap-4">
             {pdfLinks.map((link, index) => (
               <div key={index} ref={index === pdfLinks.length - 1 ? lastPdfElementRef : null} className="p-4 border rounded-lg shadow-md">
+                
                 <img
                   src="https://developing8.org/wp-content/themes/education-mind-child/images/file-icons/pdf.png"
                   alt="PDF Icon"
