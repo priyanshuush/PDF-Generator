@@ -16,7 +16,6 @@ const s3 = require('./aws-config');
 const auth = require("./auth");
 const session = require('express-session');
 const passport = require("passport");
-const pdfModel = require("./db/pdfModel");
 const FormData = require('form-data');
 const axios = require('axios');
 
@@ -66,16 +65,8 @@ const upload = multer({ storage });
 
 
 
-
-
-
-app.post('/upload', upload.single('pdf'), async (req, res) => {
+async function uploadPdf(fileBuffer, originalname, email) {
   try {
-    if (!req.file) {
-      return res.status(400).send('No file uploaded');
-    }
-
-    const { email } = req.body;
     let userId = null;
     let sessionToken = '';
     let user = null;
@@ -86,78 +77,79 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 
     if (user) {
       userId = user._id;
-      const { originalname } = req.file;
-      const fileExtension = path.extname(originalname);
-      const filename = `${uuidv4()}${fileExtension}`;
-      
+
+      const fileExtension = originalname.split('.').pop();
+      const filename = `${uuidv4()}.${fileExtension}`;
+
       const params = {
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: filename,
-        Body: req.file.buffer,
-        ContentType: req.file.mimetype,
+        Body: fileBuffer,
+        ContentType: 'application/pdf',
         ACL: 'private'
       };
 
-      s3.upload(params, async (err, data) => {
-        if (err) {
-          console.error('Error uploading to S3:', err);
-          return res.status(500).send('Error uploading file');
-        }
+      const data = await s3.upload(params).promise();
+      const s3Key = data.Key;
+      const downloadLink = data.Location;
 
-        const s3Key = data.Key;
-        const downloadLink = data.Location;
-
-        const newPdfDoc = new PDFModel({
-          userID: userId,
-          email: email,
-          title: originalname,
-          s3Key: s3Key,
-          downloadURL: downloadLink,
-        });
-
-        await newPdfDoc.save();
-        res.status(200).send(`File "${originalname}" uploaded successfully`);
+      const newPdfDoc = new PDFModel({
+        userID: userId,
+        email: email,
+        title: originalname,
+        s3Key: s3Key,
+        downloadURL: downloadLink,
       });
+
+      await newPdfDoc.save();
+      return { success: true, message: `File "${originalname}" uploaded successfully` };
     } else {
       sessionToken = uuidv4();
-      const { originalname } = req.file;
-      const fileExtension = path.extname(originalname);
-      const filename = `${fileExtension}${fileExtension}`; 
-      
+
+      const filename = `${uuidv4()}.pdf`;
       const formData = new FormData();
-      formData.append('file', req.file.buffer, originalname);
+      formData.append('file', fileBuffer, originalname);
 
-      axios.post('https://tmpfiles.org/api/v1/upload', formData, {
+      const response = await axios.post('https://tmpfiles.org/api/v1/upload', formData, {
         headers: {
-          ...formData.getHeaders()
+          'Content-Type': 'multipart/form-data'
         }
-      }).then(response => {
-        if (response.data.status !== 'success') {
-          res.status(500).send('Error uploading file to tmpfiles.org');
-        }
-
-        else {
-          const tmpfileDownloadURL = response.data.data.url;
-
-          const newPdfDoc = new PDFModel({
-            title: originalname,
-            downloadURL: tmpfileDownloadURL,
-            sessionToken: sessionToken,
-            shouldExpire: true
-          });
-
-          newPdfDoc.save();
-          res.status(200).send(`File "${originalname}" uploaded successfully to tmpfiles.org. Download URL: ${tmpfileDownloadURL}`);
-        }
-      }).catch(error => {
-        console.error('Error uploading to tmpfiles.org:', error);
-        res.status(500).send('Error uploading file to tmpfiles.org');
       });
+
+      const tmpfileDownloadURL = response.data.data.URL;
+
+      const newPdfDoc = new PDFModel({
+        title: originalname,
+        downloadURL: tmpfileDownloadURL,
+        sessionToken: sessionToken,
+        shouldExpire: true
+      });
+
+      await newPdfDoc.save();
+      return { success: true, message: `File "${originalname}" uploaded successfully to tmpfiles.org. Download URL: ${tmpfileDownloadURL}` };
+    }
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'Error uploading file' };
+  }
+}
+
+
+
+
+app.post('/upload', upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).send('No file uploaded');
     }
 
-    if (sessionToken) {
-      const tokenExpiry = new Date(Date.now() + 3600000);
-      res.cookie('sessionToken', sessionToken, { expires: tokenExpiry });
+    const { email } = req.body;
+    const result = await uploadPdf(req.file.buffer, req.file.originalname, email);
+
+    if (result.success) {
+      res.status(200).send(result.message);
+    } else {
+      res.status(500).send(result.message);
     }
   } catch (error) {
     console.error(error);
@@ -480,6 +472,37 @@ app.post('/login/extract-pages', auth, async (req, res) => {
 
   }
 
+});
+
+
+app.post('/merge', upload.array('pdfs'), async (req, res) => {
+  try {
+    if (!req.files || req.files.length < 2) {
+      return res.status(400).send('At least two PDF files are required');
+    }
+
+    const mergedPdf = await PDFDocument.create();
+
+    for (const file of req.files) {
+      const pdfDoc = await PDFDocument.load(file.buffer);
+      const copiedPages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+      copiedPages.forEach(page => mergedPdf.addPage(page));
+    }
+
+    const mergedPdfBuffer = await mergedPdf.save();
+
+    const { email } = req.body;
+    const result = await uploadPdf(mergedPdfBuffer, 'Merged PDF', email);
+
+    if (result.success) {
+      res.status(200).send(result.message);
+    } else {
+      res.status(500).send(result.message);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error merging files');
+  }
 });
 
 
