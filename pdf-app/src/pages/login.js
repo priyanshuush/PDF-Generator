@@ -53,7 +53,7 @@ const Login = () => {
      
       
     } catch (error) {
-      console.error('Error:', error.response.data); 
+      console.error('Error:', error.response); 
       toast.error("Wrong ID or password");
     }
   };

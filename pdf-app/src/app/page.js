@@ -1,16 +1,18 @@
 import CustomNavbar from '@/components/CustomNavbar'
-
-import DropzoneArea from '@/components/Dropzone'
-
 import Footer from '@/components/footer'
+
+
+import Home from '@/pages/home'
+
+
 import { AuthProvider } from '@/AuthContext'
+import "tailwindcss/tailwind.css";
 
 
 
 
 
-
-export default function Home() {
+export default function HomePage() {
 
   return (
     <AuthProvider>
@@ -22,7 +24,7 @@ export default function Home() {
 
       <br/>
 
-      <DropzoneArea/>
+      <Home/>
 
       <br/>
 

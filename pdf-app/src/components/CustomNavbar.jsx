@@ -1,13 +1,15 @@
 "use client"
 
 import { Disclosure, Menu } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline'; // Import the ChevronDownIcon
+import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useContext } from 'react';
 import { AuthContext } from '../AuthContext';
 import Cookies from 'js-cookie';
+import "tailwindcss/tailwind.css";
 
 export default function CustomNavbar() {
+  
 
   const { isAuthenticated, setIsAuthenticated } = useContext(AuthContext);
 
@@ -31,14 +33,14 @@ export default function CustomNavbar() {
   }
   };
   return (
-    <Disclosure as="nav" className="bg-white fixed top-0 w-full z-10 shadow-md">
+    <Disclosure as="nav" className="bg-light-footer fixed top-0 w-full z-10 shadow-md">
       {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
             <div className="relative flex h-16 items-center justify-between">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
                 {/* Mobile menu button*/}
-                <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-black hover:bg-black-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-black-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="absolute -inset-0.5" />
                   <span className="sr-only">Open main menu</span>
                   {open ? (
@@ -54,22 +56,22 @@ export default function CustomNavbar() {
                 <div className="hidden sm:ml-6 sm:block">
                   <div className="flex space-x-4">
                     <Link href="/">
-                      <button className="text-black hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Home</button>
+                      <button className="text-white hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Home</button>
                     </Link>
                     
                     <Link href="/about">
-                      <button className="text-black hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">About</button>
+                      <button className="text-white hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">About</button>
                     </Link>
                     {/* Dropdown Button */}
                     <Menu as="div" className="relative">
-                      <Menu.Button className="text-black hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium flex items-center"> {/* Added flex and items-center */}
-                        Tools <ChevronDownIcon className="h-4 w-4 ml-1" /> {/* Added ChevronDownIcon */}
+                      <Menu.Button className="text-white hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium flex items-center"> {/* Added flex and items-center */}
+                        Tools <ChevronDownIcon className="h-4 w-4 ml-1" />
                       </Menu.Button>
                       <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div className="py-1">
                           <Menu.Item>
                             {({ active }) => (
-                              <Link href="/faq">
+                              <Link href={"/extractpages"}>
                                 <button
                                   className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                     } flex justify-between w-full px-4 py-2 text-sm`}
@@ -81,7 +83,31 @@ export default function CustomNavbar() {
                           </Menu.Item>
                           <Menu.Item>
                             {({ active }) => (
-                              <Link href="/contact">
+                              <Link href={"/textextractor"}>
+                                <button
+                                  className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                    } flex justify-between w-full px-4 py-2 text-sm`}
+                                >
+                                  PDF Text Extractor
+                                </button>
+                              </Link>
+                            )}
+                          </Menu.Item>
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link href={"/translatepdf"}>
+                                <button
+                                  className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                    } flex justify-between w-full px-4 py-2 text-sm`}
+                                >
+                                  Translate PDF
+                                </button>
+                              </Link>
+                            )}
+                          </Menu.Item>
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link href={"/mergepdf"}>
                                 <button
                                   className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                     } flex justify-between w-full px-4 py-2 text-sm`}
@@ -93,7 +119,7 @@ export default function CustomNavbar() {
                           </Menu.Item>
                           <Menu.Item>
                             {({ active }) => (
-                              <Link href="/contact">
+                              <Link href={"/compresspdf"}>
                                 <button
                                   className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                     } flex justify-between w-full px-4 py-2 text-sm`}
@@ -113,8 +139,8 @@ export default function CustomNavbar() {
                 {isAuthenticated ? (
 
                   <Menu as="div" className="relative">
-                    <Menu.Button className="text-black hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium flex items-center"> {/* Added flex and items-center */}
-                      {username} <ChevronDownIcon className="h-4 w-4 ml-1" /> {/* Added ChevronDownIcon */}
+                    <Menu.Button className="text-white hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium flex items-center"> {/* Added flex and items-center */}
+                      {username} <ChevronDownIcon className="h-4 w-4 ml-1" />
                     </Menu.Button>
                     <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                       <div className="py-1">
