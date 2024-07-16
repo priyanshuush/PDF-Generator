@@ -8,6 +8,8 @@ import { AuthContext } from '../AuthContext';
 import Cookies from 'js-cookie';
 import "tailwindcss/tailwind.css";
 
+import axios from 'axios';
+
 export default function CustomNavbar() {
   
 
@@ -24,6 +26,14 @@ export default function CustomNavbar() {
     Cookies.remove('token');
     Cookies.remove('email');
     Cookies.remove('username');
+
+    axios.post('http://localhost:8000/logout', { username: username })
+      .then((response) => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
 
     setIsAuthenticated(false);
 
@@ -71,7 +81,7 @@ export default function CustomNavbar() {
                         <div className="py-1">
                           <Menu.Item>
                             {({ active }) => (
-                              <Link href={"/extractpages"}>
+                              <Link href={"/extractPDF/extractpages"}>
                                 <button
                                   className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                     } flex justify-between w-full px-4 py-2 text-sm`}
@@ -83,7 +93,7 @@ export default function CustomNavbar() {
                           </Menu.Item>
                           <Menu.Item>
                             {({ active }) => (
-                              <Link href={"/textextractor"}>
+                              <Link href={"/textExtractPDF/textextractor"}>
                                 <button
                                   className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                     } flex justify-between w-full px-4 py-2 text-sm`}
@@ -95,7 +105,7 @@ export default function CustomNavbar() {
                           </Menu.Item>
                           <Menu.Item>
                             {({ active }) => (
-                              <Link href={"/translatepdf"}>
+                              <Link href={"/translatePDF/translatepdf"}>
                                 <button
                                   className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                     } flex justify-between w-full px-4 py-2 text-sm`}
@@ -107,7 +117,7 @@ export default function CustomNavbar() {
                           </Menu.Item>
                           <Menu.Item>
                             {({ active }) => (
-                              <Link href={"/mergepdf"}>
+                              <Link href={"/mergePDF/mergepdf"}>
                                 <button
                                   className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                     } flex justify-between w-full px-4 py-2 text-sm`}
@@ -119,12 +129,24 @@ export default function CustomNavbar() {
                           </Menu.Item>
                           <Menu.Item>
                             {({ active }) => (
-                              <Link href={"/compresspdf"}>
+                              <Link href={"/compressPDF/compresspdf"}>
                                 <button
                                   className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                     } flex justify-between w-full px-4 py-2 text-sm`}
                                 >
                                   Compress PDF
+                                </button>
+                              </Link>
+                            )}
+                          </Menu.Item>
+                          <Menu.Item>
+                            {({ active }) => (
+                              <Link href={"/editPDF/editpdf"}>
+                                <button
+                                  className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                    } flex justify-between w-full px-4 py-2 text-sm`}
+                                >
+                                  Edit PDF
                                 </button>
                               </Link>
                             )}
@@ -139,14 +161,14 @@ export default function CustomNavbar() {
                 {isAuthenticated ? (
 
                   <Menu as="div" className="relative">
-                    <Menu.Button className="text-white hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium flex items-center"> {/* Added flex and items-center */}
+                    <Menu.Button className="text-white hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium flex items-center">
                       {username} <ChevronDownIcon className="h-4 w-4 ml-1" />
                     </Menu.Button>
                     <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                       <div className="py-1">
                         <Menu.Item>
                           {({ active }) => (
-                            <Link href="/allpdf">
+                            <Link href={"/allpdf"}>
                               <button
                                 className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                   } flex justify-between w-full px-4 py-2 text-sm`}
@@ -178,10 +200,10 @@ export default function CustomNavbar() {
 
                 ) : (
                   <>
-                    <Link href="/login">
+                    <Link href={"/auth/login"}>
                       <button className="bg-gray-500 rounded-lg shadow-lg hover:bg-gray-900 hover:text-white rounded-md px-3 py-2 text-sm font-medium mr-4">Login</button>
                     </Link>
-                    <Link href="/signup">
+                    <Link href={"/auth/signup"}>
                       <button className="bg-gray-500 rounded-lg shadow-lg hover:bg-gray-900 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Sign Up</button>
                     </Link>
                   </>

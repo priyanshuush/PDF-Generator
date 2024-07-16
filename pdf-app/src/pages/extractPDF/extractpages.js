@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import DropzoneComponent from '../components/Dropzone';
+import DropzoneComponent from '@/components/Dropzone';
 import "tailwindcss/tailwind.css";
 import CustomNavbar from '@/components/CustomNavbar';
 import { AuthProvider } from '@/AuthContext';

@@ -87,7 +87,7 @@ const Home = () => {
     return (
         <>
             <Head>
-                <title>PDF Generator</title>
+                <title>DocuMane - Your One Stop To All Document Management Services</title>
             </Head>
             <div className="bg-white min-h-screen">
                 <header className="text-black py-20">

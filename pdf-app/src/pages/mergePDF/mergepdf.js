@@ -1,9 +1,19 @@
 import React, { useState } from 'react';
 import { TrashOutline } from "heroicons-react";
 import "tailwindcss/tailwind.css";
+import Head from "next/head";
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { ToastContainer } from 'react-toastify';
+import { toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+import { useRouter } from 'next/router';
+
+
 
 const MergePDF = () => {
   const [files, setFiles] = useState([]);
+  const router = useRouter();
 
   const handleFilesUpload = (event) => {
     const selectedFiles = Array.from(event.target.files);
@@ -56,10 +66,49 @@ const MergePDF = () => {
 
   const handleMerge = () => {
     const selectedFiles = files.filter(fileObj => fileObj.selected);
+
+    if (selectedFiles.length < 2) {
+      alert("Please select at least two files to merge.");
+      return;
+    }
+
+    const formData = new FormData();
+    selectedFiles.forEach(fileObj => {
+      formData.append('pdfs', fileObj.file);
+    });
+
+    const token = Cookies.get('token');
+    if (!token) {
+      console.error("No authentication token found.");
+      return;
+    }
+
+    axios.post('http://localhost:8000/tools/merge', formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    .then((response) => {
+      router.push({
+        pathname: '/mergePDF/download',
+        query: { url: encodeURIComponent(response.data) }
+      });
+    })
+    .catch((error) => {
+      toast.error("File Merge Unsucessful!");
+      console.log(error);
+    });
+
     console.log("Selected files for merging:", selectedFiles);
   };
 
   return (
+    <>
+    <ToastContainer />
+    <Head>
+        <title>DocuMane - Merge PDFs</title>
+    </Head>
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
         <div className="flex justify-between items-center mb-6">
@@ -138,6 +187,7 @@ const MergePDF = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
