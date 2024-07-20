@@ -28,7 +28,6 @@ async function uploadPdf(fileBuffer, originalname, email) {
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: filename,
         Body: fileBuffer,
-        ContentType: 'application/pdf',
         ACL: 'private'
       };
 

@@ -221,7 +221,7 @@ router.post(
 
 //img-pdf
 
-router.post("/images-to-pdf", multerMiddleware.array("images"), async (req, res) => {
+router.post("/images-to-pdf", multerMiddleware.array("images"), auth, async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).send("Please upload at least one image.");
@@ -259,12 +259,22 @@ router.post("/images-to-pdf", multerMiddleware.array("images"), async (req, res)
 
     const pdfBytes = await pdfDoc.save();
 
-    const { email } = req.body;
+    const email = req.user.userEmail;
 
     const result = await uploadPdf(pdfBytes, "ImagesToPDF.pdf", email);
 
     if (result.success) {
-      res.status(200).send(result.message);
+      try {
+        const params = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: result.message,
+          Expires: 60 * 60,
+        };
+        const url = s3.getSignedUrl("getObject", params);
+        res.status(200).send(url);
+      } catch (error) {
+        console.error(error);
+      }
     } else {
       res.status(500).send(result.message);
     }
@@ -277,9 +287,11 @@ router.post("/images-to-pdf", multerMiddleware.array("images"), async (req, res)
 
 // PDF to Word
 
-router.post("/pdf-to-word", multerMiddleware.single("pdf"), async (req, res) => {
+router.post("/pdf-to-word", multerMiddleware.single("pdf"), auth, async (req, res) => {
   try {
-    const { file } = req; // Multer handles file uploads and attaches the file to req.file
+    const { file } = req;
+    const email = req.user.userEmail;
+    console.log("Email:", email);
 
     if (!file) {
       return res.status(400).send("Please upload a PDF file.");
@@ -287,18 +299,14 @@ router.post("/pdf-to-word", multerMiddleware.single("pdf"), async (req, res) => 
     const pdfBuffer = file.buffer;
 
     // Parse the PDF buffer to extract text
-
     const pdfData = await pdfParse(pdfBuffer);
-
     const extractedText = pdfData.text;
 
     // Create a new Word document
-
     const doc = new Document({
       sections: [
         {
           properties: {},
-
           children: [
             new Paragraph({
               children: [new TextRun(extractedText)],
@@ -309,21 +317,31 @@ router.post("/pdf-to-word", multerMiddleware.single("pdf"), async (req, res) => 
     });
 
     // Generate the Word document buffer
-
     const docxBuffer = await Packer.toBuffer(doc);
 
-    // Send the Word document back to the client
+    // Use the provided uploadPdf function to upload the Word document
+    const result = await uploadPdf(docxBuffer, "converted.docx", email);
+    console.log(result);
 
-    res.setHeader("Content-Disposition", "attachment; filename=converted.docx");
-
-    res.type(
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    );
-
-    res.send(docxBuffer);
+    if (result.success) {
+      try {
+        const params = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: result.message,
+          Expires: 60 * 60
+        };
+        const url = s3.getSignedUrl("getObject", params);
+        console.log(url);
+        res.status(200).send(url);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send("Error generating pre-signed URL");
+      }
+    } else {
+      res.status(500).send(result.message);
+    }
   } catch (error) {
     console.error(error);
-
     res.status(500).send("Error converting PDF to Word");
   }
 });
