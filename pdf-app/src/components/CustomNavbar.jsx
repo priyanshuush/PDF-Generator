@@ -93,12 +93,12 @@ export default function CustomNavbar() {
                           </Menu.Item>
                           <Menu.Item>
                             {({ active }) => (
-                              <Link href={"/textExtractPDF/textextractor"}>
+                              <Link href={"/OCRPDF/OCRPDF"}>
                                 <button
                                   className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                     } flex justify-between w-full px-4 py-2 text-sm`}
                                 >
-                                  PDF Text Extractor
+                                  OCR PDF
                                 </button>
                               </Link>
                             )}
