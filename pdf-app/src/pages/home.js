@@ -94,7 +94,7 @@ const Home = () => {
                     {/* Welcome Section */}
                     <div className="container mx-auto px-4 text-center">
                         <div className=" mx-auto">
-                            <h1 className="text-6xl font-bold text-gray-800 mb-8">PDForge</h1>
+                            <h1 className="text-6xl font-bold text-gray-800 mb-8">DocuMane</h1>
                             <p className="text-xl text-gray-600 mb-8">Unlock the full potential of your documents with our comprehensive PDF toolkit.</p>
                             <Link href="/">
                                 <button
