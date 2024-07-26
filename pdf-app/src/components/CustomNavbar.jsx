@@ -91,7 +91,7 @@ export default function CustomNavbar() {
                               </Link>
                             )}
                           </Menu.Item>
-                          <Menu.Item>
+                          {/* <Menu.Item>
                             {({ active }) => (
                               <Link href={"/OCRPDF/OCRPDF"}>
                                 <button
@@ -102,7 +102,7 @@ export default function CustomNavbar() {
                                 </button>
                               </Link>
                             )}
-                          </Menu.Item>
+                          </Menu.Item> */}
                           <Menu.Item>
                             {({ active }) => (
                               <Link href={"/translatePDF/translatepdf"}>
@@ -163,7 +163,7 @@ export default function CustomNavbar() {
                               </Link>
                             )}
                           </Menu.Item>
-                          <Menu.Item>
+                          {/* <Menu.Item>
                             {({ active }) => (
                               <Link href={"/editPDF/editpdf"}>
                                 <button
@@ -174,7 +174,7 @@ export default function CustomNavbar() {
                                 </button>
                               </Link>
                             )}
-                          </Menu.Item>
+                          </Menu.Item> */}
                         </div>
                       </Menu.Items>
                     </Menu>
