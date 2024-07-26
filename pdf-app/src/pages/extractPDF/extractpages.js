@@ -1,185 +1,231 @@
-"use client";
-import React, { useState } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import axios from 'axios';
-import Cookies from 'js-cookie';
-import DropzoneComponent from '@/components/Dropzone';
+import React, { useState, useEffect, useMemo } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import { TrashOutline } from "heroicons-react";
 import "tailwindcss/tailwind.css";
-import CustomNavbar from '@/components/CustomNavbar';
-import { AuthProvider } from '@/AuthContext';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
+import Head from "next/head";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useRouter } from "next/router";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const ExtractPDF = () => {
-  const [pdfFile, setPdfFile] = useState(null);
+  const [file, setFile] = useState(null);
+  const [pdfData, setPdfData] = useState(null);
   const [numPages, setNumPages] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [error, setError] = useState(null);
+  const [pageNumber, setPageNumber] = useState(1);
   const [selectedPages, setSelectedPages] = useState([]);
+  const router = useRouter();
+  const [fileUrl, setFileUrl] = useState(null);
 
-  const onFileUpload = (file) => {
-    setPdfFile(file); // Set the file for previewing
-    setError(null);
+  const handleFileUpload = (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile && selectedFile.type === "application/pdf") {
+      setFile({ file: selectedFile, selected: true });
+      setFileUrl(URL.createObjectURL(selectedFile));
+    } else {
+      toast.error("Please upload a valid PDF file.");
+    }
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const droppedFile = event.dataTransfer.files[0];
+    if (droppedFile && droppedFile.type === "application/pdf") {
+      setFile({ file: droppedFile, selected: true });
+      setFileUrl(URL.createObjectURL(droppedFile));
+    } else {
+      toast.error("Please upload a valid PDF file.");
+    }
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
+
+  const handleFileRemove = () => {
+    setFile(null);
+    if (fileUrl) {
+      URL.revokeObjectURL(fileUrl);
+    }
+    setFileUrl(null);
+    setNumPages(null);
+    setPageNumber(1);
+    setSelectedPages([]);
   };
 
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages);
-    setCurrentPage(1);
-    setError(null);
-  };
-
-  /**
-   * Splits the PDF file based on the selected pages and downloads the result.
-   *
-   * @returns {void}
-   */
-  const splitPdf = () => {
-    // Check if a PDF file is selected
-    if (pdfFile) {
-      const filename = pdfFile.name;
-
-      // Prepare the data to be sent in the request
-      const data = {
-        filename: filename, // The name of the PDF file
-        selectedPages: selectedPages, // The pages to be extracted
-      };
-
-      // Set the URL and configuration based on whether a user is logged in or not
-      let url = 'http://localhost:8000/extract-pages'; // Default URL
-      let config = {}; // Default configuration
-
-      const token = Cookies.get('token'); // Get the user's token
-      if (token) {
-        url = 'http://localhost:8000/login/extract-pages'; // URL for logged-in users
-        config = {
-          headers: {
-            Authorization: `Bearer ${token}`, // Set the authorization header with the token
-          },
-        };
-      }
-
-      // Send the request to split the PDF and handle the response
-      axios.post(url, data, config)
-        .then(response => {
-          window.open(response.data.downloadLink, '_blank'); // Open the downloaded PDF in a new tab
-          setError(null); // Clear any error messages
-          setPdfFile(null); // Clear the selected PDF file
-        })
-        .catch(error => {
-          console.error('Error splitting PDF:', error); // Log any errors that occur during the request
-          setError('Error splitting PDF. Please try again.'); // Display an error message to the user
-        });
-    }
-  };
-
-  const onDocumentLoadError = (error) => {
-    console.error('Failed to load PDF:', error);
-    setError('Failed to load PDF file. Please try a different file.');
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < numPages) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+    setPageNumber((prevPageNumber) => Math.max(prevPageNumber - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setPageNumber((prevPageNumber) => Math.min(prevPageNumber + 1, numPages));
+  };
+
+  const handleCheckboxChange = (event, pageIndex) => {
+    if (event.target.checked) {
+      setSelectedPages((prevSelectedPages) => [...prevSelectedPages, pageIndex + 1]);
+    } else {
+      setSelectedPages((prevSelectedPages) =>
+        prevSelectedPages.filter((page) => page !== pageIndex + 1)
+      );
     }
   };
 
-  const handleCheckboxChange = (pageNumber) => {
-    if (selectedPages.includes(pageNumber)) {
-      setSelectedPages(selectedPages.filter(page => page !== pageNumber));
-    } else {
-      setSelectedPages([...selectedPages, pageNumber]);
+  const handleExtractPages = () => {
+    if (!file) {
+      toast.error("Please select a file to extract pages from.");
+      return;
     }
+  
+    if (selectedPages.length === 0) {
+      toast.error("Please select at least one page to extract.");
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append("pdf", file.file);
+    formData.append("selectedPages", JSON.stringify(selectedPages));
+  
+    const token = Cookies.get("token");
+    if (!token) {
+      console.error("No authentication token found.");
+      return;
+    }
+  
+    axios
+      .post("http://localhost:8000/tools/extract-pages", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then((response) => {
+        router.push({
+          pathname: "/extractPDF/download",
+          query: { url: encodeURIComponent(response.data) },
+        });
+      })
+      .catch((error) => {
+        toast.error("Page extraction unsuccessful!");
+        console.log(error);
+      });
   };
+
+
+  const memoizedFile = useMemo(() => ({ url: fileUrl }), [fileUrl]);
+  
 
   return (
     <>
-    {/* <CustomNavbar /> */}
-    <div className="flex-grow mx-auto h-screen p-4">
-      {!pdfFile && <DropzoneComponent onFileUpload={onFileUpload} />}
-      {error && (
-        <div className="mt-4 px-4 py-3 rounded-md bg-red-100 border border-red-400 text-red-700 text-sm font-medium" role="alert">
-          <div className="flex items-center">
-            <svg
-              className="w-5 h-5 mr-2 text-red-600"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
+      <ToastContainer />
+      <Head>
+        <title>DocuMane - Extract PDF</title>
+      </Head>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="font-bold text-2xl px-12">Extract PDF</h1>
+            <button
+              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+              onClick={handleExtractPages}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-            <span>{error}</span>
+              Extract Pages
+            </button>
           </div>
-        </div>
-      )}
-      {pdfFile && (
-        <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundRepeat: 'no-repeat' }}>
-          <div style={{ width: '50%', maxHeight: '50%' }}>
-            <Document
-              file={pdfFile}
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={onDocumentLoadError}
-            >
-              <div style={{ position: 'relative' }}>
-                <Page
-                  pageNumber={currentPage}
-                  width={800}
+
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onClick={() => document.getElementById("file-upload").click()}
+            className="w-full p-8 border-2 border-dashed border-gray-300 rounded-lg mb-6 relative cursor-pointer hover:border-blue-500 transition duration-300"
+          >
+            <p className="text-gray-500 text-center text-lg">
+              Drag and drop your PDF file here or click to select file
+            </p>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="file-upload"
+            />
+          </div>
+
+          {file && (
+            <div className="mb-6">
+              <div className="flex justify-between items-center bg-gray-100 p-3 rounded-lg">
+                <span className="px-4 font-medium">{file.file.name}</span>
+                <button onClick={handleFileRemove} className="text-red-500 hover:text-red-600 transition duration-300">
+                  <TrashOutline className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {fileUrl && (
+            <div className="flex flex-col items-center">
+              <Document
+                file={memoizedFile}
+                onLoadSuccess={onDocumentLoadSuccess}
+              >
+                <Page 
+                  pageNumber={pageNumber} 
                   renderTextLayer={false}
                   renderAnnotationLayer={false}
                   customTextRenderer={false}
                 />
-                <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedPages.includes(currentPage)}
-                    onChange={() => handleCheckboxChange(currentPage)}
-                  />
+              </Document>
+
+              <div className="flex justify-between items-center mt-6 w-full">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={pageNumber <= 1}
+                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition duration-300 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="font-medium">
+                  Page {pageNumber} of {numPages}
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={pageNumber >= numPages}
+                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition duration-300 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+
+              <div className="mt-8 w-full">
+                <h2 className="text-xl font-semibold mb-4">Select Pages to Extract</h2>
+                <div className="grid grid-cols-4 gap-4">
+                  {Array.from(new Array(numPages), (el, index) => (
+                    <div key={index} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`page-${index + 1}`}
+                        onChange={(event) => handleCheckboxChange(event, index)}
+                        className="form-checkbox h-5 w-5 text-blue-600 transition duration-150 ease-in-out"
+                      />
+                      <label htmlFor={`page-${index + 1}`} className="ml-2 text-gray-700">
+                        Page {index + 1}
+                      </label>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </Document>
-            <div className="flex justify-between mt-4 mb-4">
-              <button
-                className="px-4 py-2 border border-gray-600 rounded bg-gray-500 hover:bg-gray-700"
-                onClick={handlePreviousPage}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              <button
-                className="px-4 py-2 border border-gray-600 rounded bg-gray-500 hover:bg-gray-700"
-                onClick={splitPdf}
-                style={{ marginLeft: '45%' }}
-              >
-                Split PDF
-              </button>
-              <button
-                className="px-4 py-2 border border-gray-600 rounded bg-gray-500 hover:bg-gray-700"
-                onClick={handleNextPage}
-                disabled={currentPage === numPages}
-                style={{ marginLeft: '45%' }}
-              >
-                Next
-              </button>
             </div>
-          </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
     </>
   );
 };

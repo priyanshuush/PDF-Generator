@@ -21,34 +21,35 @@ const { translate } = require('@vitalets/google-translate-api');
 
 
 // API endpoint to extract selected pages and create a new PDF
-router.post("/extract-pages", async (req, res) => {
+router.post("/extract-pages", multerMiddleware.single("pdf"), auth, async (req, res) => {
   try {
-    const { filename, selectedPages } = req.body;
+    const { selectedPages } = req.body;
+    const { file } = req;
 
-    // Check if filename and selectedPages are provided and selectedPages is an array
-    if (!filename || !selectedPages || !Array.isArray(selectedPages)) {
-      return res.status(400).send("Invalid request data");
+    if (!file) {
+      return res.status(400).send("Please upload a PDF file.");
     }
 
-    // Construct the file path
-    const filePath = `uploads/${filename}`;
-
-    // Check if the file exists
-    const fileExists = await fs.promises
-      .access(filePath)
-      .then(() => true)
-      .catch(() => false);
-
-    if (!fileExists) {
-      return res.status(404).send("File not found");
+    if (!selectedPages) {
+      return res.status(400).send("No pages selected.");
     }
 
-    // Load the original PDF
-    const pdf = await PDFDocument.load(await fs.promises.readFile(filePath));
+    // Parse the selectedPages as a JSON array
+    let pageNumbers;
+    try {
+      pageNumbers = JSON.parse(selectedPages);
+      if (!Array.isArray(pageNumbers) || !pageNumbers.every(num => Number.isInteger(num) && num > 0)) {
+        throw new Error();
+      }
+    } catch {
+      return res.status(400).send("Invalid selectedPages format.");
+    }
+
+    const pdfBytes = file.buffer;
+    const pdf = await PDFDocument.load(pdfBytes);
     const newPdf = await PDFDocument.create();
 
-    // Iterate through selected pages and copy them to the new PDF
-    for (const pageNumber of selectedPages) {
+    for (const pageNumber of pageNumbers) {
       if (pageNumber <= 0 || pageNumber > pdf.getPageCount()) {
         return res.status(400).send(`Invalid page number: ${pageNumber}`);
       }
@@ -56,35 +57,33 @@ router.post("/extract-pages", async (req, res) => {
       newPdf.addPage(copiedPage);
     }
 
-    // Generate a new filename with original filename and current date
-    const currentDate = new Date()
-      .toISOString()
-      .replace(/:/g, "-")
-      .slice(0, 19);
-    const extension = path.extname(filename);
-    const extractedFilename = `${path.basename(
-      filename,
-      extension
-    )}_${currentDate}${extension}`;
-
-    // Construct the new file path
-    const newFilePath = path.join(__dirname, "uploads", extractedFilename);
-
-    // Save the new PDF to the file system
     const newPdfBytes = await newPdf.save();
-    await fs.promises.writeFile(newFilePath, newPdfBytes);
 
-    // Construct the download link
-    const downloadLink = `${req.protocol}://${req.get(
-      "host"
-    )}/download/${extractedFilename}`;
+    const email = req.user.userEmail;
+    const result = await uploadPdf(newPdfBytes, "Extracted PDF", email);
 
-    res.json({ downloadLink });
+    if (result.success) {
+      try {
+        const params = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: result.message,
+          Expires: 60 * 60,
+        };
+        const url = s3.getSignedUrl("getObject", params);
+        res.status(200).send(url);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send("Error generating signed URL");
+      }
+    } else {
+      res.status(500).send(result.message);
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send("Error extracting pages");
   }
 });
+
 
 // API endpoint to extract selected pages and create a new PDF for logged in user.
 
