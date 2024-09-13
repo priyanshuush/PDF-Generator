@@ -7,14 +7,12 @@ import Head from "next/head";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import About from "@/components/about";
-import CustomNavbar from "@/components/CustomNavbar";
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 
 
 const Home = () => {
-    const router = useRouter();
+    // const router = useRouter();
 
     // Sample reviews data
     const reviews = [
@@ -89,19 +87,18 @@ const Home = () => {
     return (
         <>
             <Head>
-                <title>PDF Generator</title>
+                <title>DocuMane - Your One Stop To All Document Management Services</title>
             </Head>
             <div className="bg-white min-h-screen">
-                <header className="bg-white text-black py-20">
+                <header className="text-black py-20">
                     {/* Welcome Section */}
-                    {/* <CustomNavbar/> */}
                     <div className="container mx-auto px-4 text-center">
                         <div className=" mx-auto">
-                            <h1 className="text-6xl font-bold text-gray-800 mb-8">PDForge</h1>
+                            <h1 className="text-6xl font-bold text-gray-800 mb-8">DocuMane</h1>
                             <p className="text-xl text-gray-600 mb-8">Unlock the full potential of your documents with our comprehensive PDF toolkit.</p>
                             <Link href="/">
                                 <button
-                                    className="bg-gray-500 hover:bg-blue-900 text-white mt-5 py-3 px-40 rounded-md transition-colors duration-300"
+                                    className="bg-light-component hover:bg-dark-component text-white mt-5 py-3 px-40 rounded-md transition-colors duration-300"
                                 >
                                     Go to PDF Editor - it's absolutely free!
                                 </button>
@@ -110,38 +107,95 @@ const Home = () => {
                     </div>
                 </header>
 
-                <section className="bg-white py-12">
-                    <div className="container mx-auto px-4">
-                        <About/>
+
+                {/* About Section */}
+                <section className="py-12">
+                    <div className="min-h-screen flex flex-col items-center justify-center px-8">
+      
+                        {/* Features Section */}
+                        <div className="max-w-3xl space-y-12 mt-12 prose text-gray-300">
+                            {/* Feature 1 */}
+                            <div className="p-6 bg-light-component rounded-lg shadow-lg hover:bg-dark-component hover:scale-105 transition-transform duration-300">
+                                <h3 className="font-bold text-white text-2xl mb-4">Empowering Users with Streamlined PDF Extraction</h3>
+                                <p className="text-lg">
+                                    This application is designed to revolutionize your document management experience. We understand the frustration of working with large PDFs and the need to extract specific pages for further use. That's where our innovative PDF Generator comes in!
+                                </p>
+                            </div>
+
+                            {/* Feature 2 */}
+                            <div className="p-6 bg-light-component rounded-lg shadow-lg hover:bg-dark-component hover:scale-105 transition-transform duration-300">
+                                <h3 className="font-bold text-white text-2xl mb-4">Effortless Upload and Preview</h3>
+                                <p className="text-lg">
+                                    Our user-friendly interface features a drag-and-drop zone that makes uploading your PDF files a breeze. Forget cumbersome navigation or file selection methods. Simply drag your PDF onto the designated area, and we'll handle the rest. Once uploaded, a clear preview of your document pages will be displayed for easy reference.
+                                </p>
+                            </div>
+
+                            {/* Feature 3 */}
+                            <div className="p-6 bg-light-component rounded-lg shadow-lg hover:bg-dark-component hover:scale-105 transition-transform duration-300">
+                                <h3 className="font-bold text-white text-2xl mb-4">Precise Page Selection</h3>
+                                <p className="text-lg">
+                                    Gone are the days of manually extracting pages through tedious editing software. Our intuitive interface empowers you to meticulously select the exact pages you require. With a few simple clicks, you can choose the specific pages you need for further processing or sharing.
+                                </p>
+                            </div>
+
+                            {/* Feature 4 */}
+                            <div className="p-6 bg-light-component rounded-lg shadow-lg hover:bg-dark-component hover:scale-105 transition-transform duration-300">
+                                <h3 className="font-bold text-white text-2xl mb-4">Effortless Extraction, Instant Download</h3>
+                                <p className="text-lg">
+                                    Once you've selected the desired pages, our powerful PDF Generator takes over. With a single click, a new PDF containing only the chosen pages is generated. We then provide you with a convenient download link, allowing you to instantly access and utilize the extracted content.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
                 {/* Tools Section */}
-                <section className="bg-gray-100 py-12">
+                <section className="py-12">
                     <div className="container mx-auto px-4">
-                        <h2 className="text-2xl font-semibold mb-4 text-center">Our Tools</h2>
+                        <h2 className="text-2xl text-gray-800 font-semibold mb-4 text-center py-12">Our Tools</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {tools.map(tool => (
-                                <div key={tool.id} className="bg-white p-6 rounded-lg shadow-lg text-center hover:bg-blue-100 transition-colors duration-300">
+                                <div key={tool.id} className="bg-light-component p-6 rounded-lg shadow-lg text-center hover:mouse-pointer hover:bg-dark-component transition-colors duration-300">
                                     <h3 className="text-lg font-semibold mb-2">{tool.name}</h3>
-                                    <p className="text-gray-600">Description or feature</p>
+                                    <p className="text-gray-300">Description or feature</p>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </section>
 
+                {/* Mobile App Banner Section */}
+                <section className="relative py-12" style={{zIndex: 2}}>
+                    <div className="relative">
+                        <img 
+                        src="/path/to/your/image.jpg" 
+                        alt="Mobile App" 
+                        className="absolute inset-0 w-full h-full object-cover opacity-50"
+                        />
+                        <div className="relative z-10 bg-light-component bg-opacity-60 p-12 rounded-lg text-center flex flex-col items-center justify-center">
+                        <h2 className="text-3xl font-bold text-white mb-4">Download the Mobile App for a Smooth Experience</h2>
+                        <p className="text-xl text-white mb-8">Enjoy the convenience of managing your PDFs on the go with our mobile app.</p>
+                        <Link href="/download">
+                            <button className="bg-light-component text-white py-3 px-6 rounded-md transition-colors duration-300 hover:bg-dark-component">
+                            Download Now
+                            </button>
+                        </Link>
+                        </div>
+                    </div>
+                </section>
+
+
 
                 {/* Reviews Section */}
-                <section className="bg-white py-40">
+                <section className="py-12">
                     <div className="container mx-auto px-4">
-                        <h2 className="text-2xl font-semibold mb-16 text-center">Reviews from Our Customers</h2>
+                        <h2 className="text-2xl text-gray-800 font-semibold mb-16 text-center">Reviews from Our Customers</h2>
                         <Slider {...settings}>
                             {reviews.map((review, index) => (
                                 <div key={index} className="px-4">
-                                    <div className="bg-gray-200 p-20 rounded-lg shadow-lg text-center">
+                                    <div className="bg-light-component p-20 rounded-lg shadow-lg text-center">
                                         <p className="text-lg">{review.comment}</p>
-                                        <p className="text-gray-600 mt-10">- {review.name}</p>
+                                        <p className="text-white mt-10">- {review.name}</p>
                                     </div>
                                 </div>
                             ))}
@@ -150,10 +204,10 @@ const Home = () => {
                 </section>
 
                 {/* FAQs Section */}
-                <section className="bg-white py-12">
-                    <div className="container mx-auto px-4">
-                        <h2 className="text-2xl font-semibold mb-4">Frequently Asked Questions</h2>
-                        <div className="space-y-4">
+                <section className="py-12 text-gray-800">
+                    <div className="container mx-auto px-4 flex flex-col items-center justify-center">
+                        <h2 className="text-2xl font-semibold mb-4 text-center py-12">Frequently Asked Questions</h2>
+                        <div className="w-full md:w-3/4 lg:w-1/2 pb-4 space-y-4">
                             {faqs.map((faq, index) => (
                                 <div key={index} className="border-b pb-4">
                                     <div className="flex items-center justify-between">
@@ -173,19 +227,6 @@ const Home = () => {
                         </div>
                     </div>
                 </section>
-
-                {/* Footer Section */}
-                <footer className="mt-auto py-8">
-                    <div className="max-w-3xl mx-auto text-sm text-gray-500">
-                        <p className="mb-2 font-bold text-center">JustOurGigs ©</p>
-                        <div className="flex space-x-4">
-                        <Link href={"/about"} className="cursor-pointer hover:text-gray-700">About Us</Link>
-                        <Link href={"/about"} className="cursor-pointer hover:text-gray-700">Privacy Policy</Link>
-                        <Link href={"/about"} className="cursor-pointer hover:text-gray-700">Terms of Service</Link>
-                        <Link href={"/contact"} className="cursor-pointer hover:text-gray-700">Contact Us</Link>
-                        </div>
-                    </div>
-                </footer>
 
             </div>
         </>

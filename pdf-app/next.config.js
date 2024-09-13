@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  reactStrictMode: true,
+  reactStrictMode: true,  
 
   webpack(config, { webpack }) {
 
