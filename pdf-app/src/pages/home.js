@@ -9,7 +9,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
-
+import Image from 'next/image'
 
 const Home = () => {
     // const router = useRouter();
@@ -100,7 +100,7 @@ const Home = () => {
                                 <button
                                     className="bg-light-component hover:bg-dark-component text-white mt-5 py-3 px-40 rounded-md transition-colors duration-300"
                                 >
-                                    Go to PDF Editor - it's absolutely free!
+                                    Go to PDF Editor - it&#39;s absolutely free!
                                 </button>
                             </Link>
                         </div>
@@ -118,7 +118,7 @@ const Home = () => {
                             <div className="p-6 bg-light-component rounded-lg shadow-lg hover:bg-dark-component hover:scale-105 transition-transform duration-300">
                                 <h3 className="font-bold text-white text-2xl mb-4">Empowering Users with Streamlined PDF Extraction</h3>
                                 <p className="text-lg">
-                                    This application is designed to revolutionize your document management experience. We understand the frustration of working with large PDFs and the need to extract specific pages for further use. That's where our innovative PDF Generator comes in!
+                                    This application is designed to revolutionize your document management experience. We understand the frustration of working with large PDFs and the need to extract specific pages for further use. That&#39;s where our innovative PDF Generator comes in!
                                 </p>
                             </div>
 
@@ -126,7 +126,7 @@ const Home = () => {
                             <div className="p-6 bg-light-component rounded-lg shadow-lg hover:bg-dark-component hover:scale-105 transition-transform duration-300">
                                 <h3 className="font-bold text-white text-2xl mb-4">Effortless Upload and Preview</h3>
                                 <p className="text-lg">
-                                    Our user-friendly interface features a drag-and-drop zone that makes uploading your PDF files a breeze. Forget cumbersome navigation or file selection methods. Simply drag your PDF onto the designated area, and we'll handle the rest. Once uploaded, a clear preview of your document pages will be displayed for easy reference.
+                                    Our user-friendly interface features a drag-and-drop zone that makes uploading your PDF files a breeze. Forget cumbersome navigation or file selection methods. Simply drag your PDF onto the designated area, and we&#39;ll handle the rest. Once uploaded, a clear preview of your document pages will be displayed for easy reference.
                                 </p>
                             </div>
 
@@ -142,7 +142,7 @@ const Home = () => {
                             <div className="p-6 bg-light-component rounded-lg shadow-lg hover:bg-dark-component hover:scale-105 transition-transform duration-300">
                                 <h3 className="font-bold text-white text-2xl mb-4">Effortless Extraction, Instant Download</h3>
                                 <p className="text-lg">
-                                    Once you've selected the desired pages, our powerful PDF Generator takes over. With a single click, a new PDF containing only the chosen pages is generated. We then provide you with a convenient download link, allowing you to instantly access and utilize the extracted content.
+                                    Once you&#39;ve selected the desired pages, our powerful PDF Generator takes over. With a single click, a new PDF containing only the chosen pages is generated. We then provide you with a convenient download link, allowing you to instantly access and utilize the extracted content.
                                 </p>
                             </div>
                         </div>
