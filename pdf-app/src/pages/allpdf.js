@@ -30,7 +30,7 @@ const AllPdfPage = () => {
           return;
         }
 
-        const response = await axios.get(`http://localhost:8000/allpdfs?page=${currentPage}&limit=8`, {
+        const response = await axios.get(`https://pdf-generator-vyog.onrender.com/allpdfs?page=${currentPage}&limit=8`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -75,7 +75,7 @@ const AllPdfPage = () => {
       const fileName = pdfLink.split('/').pop();
       console.log("file name to be deleted:" + fileName);
       // Call the API to delete the PDF
-      await axios.delete(`http://localhost:8000/pdf/${fileName}`, {
+      await axios.delete(`https://pdf-generator-vyog.onrender.com/pdf/${fileName}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

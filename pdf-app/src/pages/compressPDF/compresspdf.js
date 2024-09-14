@@ -56,7 +56,7 @@ const CompressPDF = () => {
     }
 
     axios
-      .post("http://localhost:8000/tools/compresspdf", formData, {
+      .post("https://pdf-generator-vyog.onrender.com/tools/compresspdf", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

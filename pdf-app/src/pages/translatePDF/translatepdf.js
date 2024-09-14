@@ -67,7 +67,7 @@ const TranslatePDF = () => {
     }
 
     axios
-      .post("http://localhost:8000/tools/translate-pdf", formData, {
+      .post("https://pdf-generator-vyog.onrender.com/tools/translate-pdf", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

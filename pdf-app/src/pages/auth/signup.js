@@ -19,7 +19,7 @@ const Signup = () => {
   const handleSubmit = async (e) => { 
     e.preventDefault();
     try {
-       const response = await axios.post('http://localhost:8000/register', { 
+       const response = await axios.post('https://pdf-generator-vyog.onrender.com/register', { 
          email: email,
          password: password,
          username: username,
@@ -45,7 +45,7 @@ const Signup = () => {
     }
    }, [showAlert]);
    const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:8000/auth/google';
+    window.location.href = 'https://pdf-generator-vyog.onrender.com/auth/google';
  };
    
 

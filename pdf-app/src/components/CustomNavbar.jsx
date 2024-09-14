@@ -27,7 +27,7 @@ export default function CustomNavbar() {
     Cookies.remove('email');
     Cookies.remove('username');
 
-    axios.post('http://localhost:8000/logout', { username: username })
+    axios.post('https://pdf-generator-vyog.onrender.com/logout', { username: username })
       .then((response) => {
         console.log(response.data);
       })

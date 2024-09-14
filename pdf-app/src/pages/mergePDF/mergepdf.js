@@ -82,7 +82,7 @@ const MergePDF = () => {
     }
 
     axios
-      .post("http://localhost:8000/tools/merge", formData, {
+      .post("https://pdf-generator-vyog.onrender.com/tools/merge", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

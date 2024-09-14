@@ -101,7 +101,7 @@ const ExtractPDF = () => {
     }
   
     axios
-      .post("http://localhost:8000/tools/extract-pages", formData, {
+      .post("https://pdf-generator-vyog.onrender.com/tools/extract-pages", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

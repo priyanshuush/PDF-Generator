@@ -14,7 +14,7 @@ const DropzoneComponent = ({ onFileUpload }) => {
         const email = Cookies.get('email');
         formData.append('email', email);
 
-        axios.post(`http://localhost:8000/upload`, formData)
+        axios.post(`https://pdf-generator-vyog.onrender.com/upload`, formData)
           .then(response => {
             onFileUpload(file); // Call the parent callback function with the uploaded file
           })

@@ -19,7 +19,7 @@ const Upload = () => {
     const formData = new FormData();
     formData.append('originalname', selectedFile);
 
-    axios.post('http://localhost:8000/upload', formData, {
+    axios.post('https://pdf-generator-vyog.onrender.com/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
