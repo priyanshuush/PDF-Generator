@@ -150,7 +150,7 @@ router.get("/auth/failure", (req, res) => {
 
 router.get("/protected", isLoggedIn, (req, res) => {
 
-  res.redirect("http://localhost:3000/"); // add prod frontend URL
+  res.redirect("https://pdf-generator-khaki.vercel.app/");
 
 });
 
