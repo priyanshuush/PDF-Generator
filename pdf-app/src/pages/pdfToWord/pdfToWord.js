@@ -55,8 +55,8 @@ const PdfToWord = () => {
       return;
     }
 
-    axios
-      .post("https://pdf-generator-vyog.onrender.com/tools/pdf-to-word", formData, {
+    axios.post("https://pdf-generator-vyog.onrender.com/tools/pdf-to-word", formData, {
+
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

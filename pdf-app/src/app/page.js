@@ -1,5 +1,8 @@
 import CustomNavbar from '@/components/CustomNavbar'
+
 import Footer from '@/components/Footer'
+
+
 
 
 import Home from '@/pages/home'

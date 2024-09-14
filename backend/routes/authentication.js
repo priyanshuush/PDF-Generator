@@ -149,7 +149,9 @@ router.get("/auth/failure", (req, res) => {
 });
 
 router.get("/protected", isLoggedIn, (req, res) => {
-  res.redirect("https://pdf-generator-vyog.onrender.com/");
+
+  res.redirect("http://localhost:3000/"); // add prod frontend URL
+
 });
 
 module.exports = router;

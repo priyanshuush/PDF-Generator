@@ -81,8 +81,8 @@ const ImagesToPDF = () => {
       return;
     }
 
-    axios
-      .post("https://pdf-generator-vyog.onrender.com/tools/images-to-pdf", formData, {
+    axios.post("https://pdf-generator-vyog.onrender.com/tools/images-to-pdf", formData, {
+
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
